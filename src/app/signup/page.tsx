@@ -2,33 +2,47 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { app } from '../../firebase';
 
 export default function SignupPage() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      return;
+    }
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please enter your first and last name');
       return;
     }
     setLoading(true);
     try {
       const auth = getAuth(app);
-      await createUserWithEmailAndPassword(auth, email, password);
-      setSuccess('Account created! You can now log in.');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
+      const db = getFirestore(app);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      // Save extra info in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        firstName,
+        lastName,
+        email,
+        createdAt: new Date().toISOString(),
+      });
+      // Redirect to profile setup page
+      router.push('/profile');
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
     } finally {
@@ -77,6 +91,44 @@ export default function SignupPage() {
           </div>
           <h2 style={{ textAlign: 'center', color: 'var(--color-text)', fontWeight: 700, fontSize: 28, margin: 0 }}>AdmitCoach</h2>
           <p style={{ color: 'var(--color-label)', fontSize: 16, marginTop: 4 }}>Create your account</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label htmlFor="firstName" style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>First Name</label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            required
+            value={firstName}
+            onChange={e => setFirstName(e.target.value)}
+            style={{
+              padding: '0.75rem',
+              borderRadius: 8,
+              border: '1.5px solid var(--color-border)',
+              fontSize: 16,
+              outline: 'none',
+              transition: 'border 0.2s',
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label htmlFor="lastName" style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Last Name</label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            required
+            value={lastName}
+            onChange={e => setLastName(e.target.value)}
+            style={{
+              padding: '0.75rem',
+              borderRadius: 8,
+              border: '1.5px solid var(--color-border)',
+              fontSize: 16,
+              outline: 'none',
+              transition: 'border 0.2s',
+            }}
+          />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <label htmlFor="email" style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Email</label>
@@ -157,7 +209,6 @@ export default function SignupPage() {
           {loading ? 'Signing up...' : 'Sign up'}
         </button>
         {error && <div style={{ color: '#ef4444', textAlign: 'center', fontSize: 15 }}>{error}</div>}
-        {success && <div style={{ color: '#22c55e', textAlign: 'center', fontSize: 15 }}>{success}</div>}
         <div style={{ textAlign: 'center', marginTop: 8 }}>
           <span style={{ color: 'var(--color-label)', fontSize: 15 }}>
             Already have an account?{' '}
