@@ -1,7 +1,41 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { app } from '../../firebase';
 
 export default function SignupPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    setLoading(true);
+    try {
+      const auth = getAuth(app);
+      await createUserWithEmailAndPassword(auth, email, password);
+      setSuccess('Account created! You can now log in.');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -13,6 +47,7 @@ export default function SignupPage() {
       }}
     >
       <form
+        onSubmit={handleSubmit}
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -50,6 +85,8 @@ export default function SignupPage() {
             id="email"
             name="email"
             required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
             style={{
               padding: '0.75rem',
               borderRadius: 8,
@@ -67,6 +104,8 @@ export default function SignupPage() {
             id="password"
             name="password"
             required
+            value={password}
+            onChange={e => setPassword(e.target.value)}
             style={{
               padding: '0.75rem',
               borderRadius: 8,
@@ -84,6 +123,8 @@ export default function SignupPage() {
             id="confirmPassword"
             name="confirmPassword"
             required
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
             style={{
               padding: '0.75rem',
               borderRadius: 8,
@@ -96,6 +137,7 @@ export default function SignupPage() {
         </div>
         <button
           type="submit"
+          disabled={loading}
           style={{
             padding: '0.75rem',
             borderRadius: 8,
@@ -106,13 +148,16 @@ export default function SignupPage() {
             fontSize: 17,
             letterSpacing: 0.5,
             boxShadow: '0 2px 8px rgba(14, 165, 233, 0.10)',
-            cursor: 'pointer',
+            cursor: loading ? 'not-allowed' : 'pointer',
             marginTop: 8,
             transition: 'background 0.2s',
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          Sign up
+          {loading ? 'Signing up...' : 'Sign up'}
         </button>
+        {error && <div style={{ color: '#ef4444', textAlign: 'center', fontSize: 15 }}>{error}</div>}
+        {success && <div style={{ color: '#22c55e', textAlign: 'center', fontSize: 15 }}>{success}</div>}
         <div style={{ textAlign: 'center', marginTop: 8 }}>
           <span style={{ color: 'var(--color-label)', fontSize: 15 }}>
             Already have an account?{' '}
