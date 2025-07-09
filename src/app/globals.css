@@ -1,6 +1,12 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #0ea5e9;
+  --color-secondary: #06b6d4;
+  --color-bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0fdfa 100%);
+  --color-card-bg: #fff;
+  --color-card-shadow: 0 4px 24px rgba(14, 165, 233, 0.08);
+  --color-border: #bae6fd;
+  --color-text: #0f172a;
+  --color-label: #334155;
 }
 
 @media (prefers-color-scheme: dark) {
