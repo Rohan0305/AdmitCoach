@@ -1,7 +1,26 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { getAuth } from 'firebase/auth';
+import { app } from '../firebase';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const auth = getAuth(app);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is logged in, redirect to dashboard
+        router.push('/dashboard');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
   return (
     <div
       style={{

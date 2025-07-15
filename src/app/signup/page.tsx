@@ -42,7 +42,7 @@ export default function SignupPage() {
         createdAt: new Date().toISOString(),
       });
       // Redirect to profile setup page
-      router.push('/profile');
+      router.push('/setup-profile');
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
     } finally {

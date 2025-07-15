@@ -1,12 +1,12 @@
 import { app } from "@/firebase";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
+import React from "react";
 import { useEffect, useState } from "react";
-import useAuthUser from "../zustand/useAuthUser";
 
-const getAuthUser = () => {
-  const { setUser } = useAuthUser();
-  const [userLoading, setUserLoading] = useState(true);
+const getUserData = () => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [userData, setUserData] = useState<any>(undefined);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -14,25 +14,23 @@ const getAuthUser = () => {
       const db = getFirestore(app);
       const user = auth.currentUser;
       if (!user) {
-        setUser(null)
-        setUserLoading(false);
+        console.log("HERE!!!!")
+        setLoading(false);
         return;
       }
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
-        } else {
-            setUser(null);
+            setUserData(userDoc.data())
         }
       } catch (err) {
-        setUser(null);
+        
       }
-      setUserLoading(false);
     };
     fetchUserData();
   }, []);
-  return { userLoading };
+
+  return {loading, userData};
 };
 
-export default getAuthUser;
+export default getUserData;

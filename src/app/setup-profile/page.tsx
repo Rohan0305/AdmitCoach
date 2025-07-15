@@ -8,8 +8,13 @@ import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { app } from '../../firebase';
 import universities from '../../data/universities.json';
 import { ProgramOptions } from '@/constants/programOptions';
+import getAuthUser from '../hooks/getUser';
+import useAuthUser from '../zustand/useAuthUser';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
+  const { user } = useAuthUser();
+  const router = useRouter();
   const [program, setProgram] = useState('');
   const [programInput, setProgramInput] = useState('');
   const [showOptions, setShowOptions] = useState(false);
@@ -26,10 +31,7 @@ export default function ProfilePage() {
   const [gpa, setGpa] = useState('4.0');
 
   // Experiences state
-  const [experiences, setExperiences] = useState<{ title: string; description: string }[]>([]);
-  const [expTitle, setExpTitle] = useState('');
-  const [expDescription, setExpDescription] = useState('');
-  const [showExperienceForm, setShowExperienceForm] = useState(false);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
 
   // Filter options based on input
   const filteredOptions = ProgramOptions.filter(option =>
@@ -101,12 +103,17 @@ export default function ProfilePage() {
     setGpa(value);
   };
 
-  const handleAddExperience = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!expTitle.trim() || !expDescription.trim()) return;
-    setExperiences(prev => [...prev, { title: expTitle.trim(), description: expDescription.trim() }]);
-    setExpTitle('');
-    setExpDescription('');
+  // Add handler to update experience at index
+  const handleExperienceChange = (idx: number, field: string, value: string) => {
+    setExperiences(prev => prev.map((exp, i) => i === idx ? { ...exp, [field]: value } : exp));
+  };
+
+  // Add handler to add new empty experience
+  const handleAddExperience = () => {
+    setExperiences(prev => [
+      ...prev,
+      { role: '', organization: '', startDate: '', endDate: '', description: '' }
+    ]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,41 +148,22 @@ export default function ProfilePage() {
         programType: program,
         undergraduateSchool: undergrad,
         gpa: gpaNum,
+        experiences: experiences,
+        profileCompleted: true,
+        lastUpdated: new Date(),
       });
       setSuccess('Profile updated!');
+      // Redirect to dashboard after successful save
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500); // Wait 1.5 seconds to show success message
     } catch (err) {
       setError('Failed to update profile.');
     }
     setLoading(false);
   };
 
-  const [userData, setUserData] = useState<{ firstName?: string } | null>(null);
-  const [userLoading, setUserLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-      const user = auth.currentUser;
-      if (!user) {
-        setUserData(null);
-        setUserLoading(false);
-        return;
-      }
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setUserData(userDoc.data());
-        } else {
-          setUserData(null);
-        }
-      } catch (err) {
-        setUserData(null);
-      }
-      setUserLoading(false);
-    };
-    fetchUserData();
-  }, []);
+  const {userLoading} = getAuthUser();
 
   return (
     <div
@@ -193,7 +181,7 @@ export default function ProfilePage() {
           display: 'flex',
           flexDirection: 'column',
           gap: '1.5rem',
-          width: 350,
+          width: 500,
           padding: 40,
           border: '1.5px solid var(--color-border)',
           borderRadius: 18,
@@ -202,7 +190,7 @@ export default function ProfilePage() {
         }}
       >
         <h1 style={{ textAlign: 'center', color: 'var(--color-text)', fontWeight: 700, fontSize: 28, margin: 0 }}>
-          {userLoading ? 'Loading...' : userData?.firstName ? `Welcome, ${userData.firstName}!` : 'Welcome!'}
+          {userLoading ? 'Loading...' : user?.firstName ? `Welcome, ${user.firstName}!` : 'Welcome!'}
         </h1>
         <h2 style={{ textAlign: 'center', color: 'var(--color-text)', fontWeight: 700, fontSize: 24, margin: 0 }}>Set Up Your Profile</h2>
         <p style={{ color: 'var(--color-label)', fontSize: 16, marginTop: 4, textAlign: 'center' }}>
@@ -364,44 +352,83 @@ export default function ProfilePage() {
         </div>
         <div style={{ marginTop: 24 }}>
           <h3 style={{ color: 'var(--color-text)', fontWeight: 600, fontSize: 20, marginBottom: 8 }}>Experiences</h3>
-          {(!showExperienceForm && experiences.length === 0) ? (
-            <button
-              type="button"
-              onClick={() => setShowExperienceForm(true)}
-              style={{
-                padding: '0.5rem 1.2rem',
-                borderRadius: 6,
-                background: 'var(--color-primary)',
-                color: '#fff',
-                border: 'none',
-                fontWeight: 600,
-                fontSize: 15,
-                cursor: 'pointer',
-              }}
-            >
-              Add Experience
-            </button>
-          ) : (
-            <>
-              <form onSubmit={handleAddExperience} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {experiences.map((exp, idx) => (
+              <li key={idx} style={{ marginBottom: 16, background: '#f8fafc', borderRadius: 8, padding: 12, border: '1px solid var(--color-border)' }}>
                 <input
                   type="text"
-                  placeholder="Title (e.g. Research Assistant)"
-                  value={expTitle}
-                  onChange={e => setExpTitle(e.target.value)}
+                  placeholder="Role (e.g. Research Assistant)"
+                  value={exp.role}
+                  onChange={e => handleExperienceChange(idx, 'role', e.target.value)}
                   style={{
                     padding: '0.5rem',
                     borderRadius: 6,
                     border: '1.5px solid var(--color-border)',
                     fontSize: 15,
                     marginBottom: 4,
+                    background: '#fff',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    width: '100%',
                   }}
                   maxLength={60}
                 />
+                <input
+                  type="text"
+                  placeholder="Organization (e.g. Harvard University)"
+                  value={exp.organization}
+                  onChange={e => handleExperienceChange(idx, 'organization', e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    borderRadius: 6,
+                    border: '1.5px solid var(--color-border)',
+                    fontSize: 15,
+                    marginBottom: 4,
+                    background: '#fff',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    width: '100%',
+                  }}
+                  maxLength={60}
+                />
+                <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                  <input
+                    type="date"
+                    placeholder="Start Date"
+                    value={exp.startDate}
+                    onChange={e => handleExperienceChange(idx, 'startDate', e.target.value)}
+                    style={{
+                      padding: '0.5rem',
+                      borderRadius: 6,
+                      border: '1.5px solid var(--color-border)',
+                      fontSize: 15,
+                      background: '#fff',
+                      color: 'var(--color-text)',
+                      outline: 'none',
+                      flex: 1,
+                    }}
+                  />
+                  <input
+                    type="date"
+                    placeholder="End Date"
+                    value={exp.endDate}
+                    onChange={e => handleExperienceChange(idx, 'endDate', e.target.value)}
+                    style={{
+                      padding: '0.5rem',
+                      borderRadius: 6,
+                      border: '1.5px solid var(--color-border)',
+                      fontSize: 15,
+                      background: '#fff',
+                      color: 'var(--color-text)',
+                      outline: 'none',
+                      flex: 1,
+                    }}
+                  />
+                </div>
                 <textarea
                   placeholder="Description (e.g. Conducted research on ... )"
-                  value={expDescription}
-                  onChange={e => setExpDescription(e.target.value)}
+                  value={exp.description}
+                  onChange={e => handleExperienceChange(idx, 'description', e.target.value)}
                   style={{
                     padding: '0.5rem',
                     borderRadius: 6,
@@ -410,42 +437,33 @@ export default function ProfilePage() {
                     minHeight: 60,
                     resize: 'vertical',
                     marginBottom: 4,
+                    background: '#fff',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    width: '100%',
                   }}
                   maxLength={400}
                 />
-                <button
-                  type="submit"
-                  style={{
-                    alignSelf: 'flex-end',
-                    padding: '0.5rem 1.2rem',
-                    borderRadius: 6,
-                    background: 'var(--color-primary)',
-                    color: '#fff',
-                    border: 'none',
-                    fontWeight: 600,
-                    fontSize: 15,
-                    cursor: 'pointer',
-                    opacity: !expTitle.trim() || !expDescription.trim() ? 0.6 : 1,
-                  }}
-                  disabled={!expTitle.trim() || !expDescription.trim()}
-                >
-                  Add Experience
-                </button>
-              </form>
-              {experiences.length === 0 ? (
-                <div style={{ color: 'var(--color-label)', fontSize: 15 }}>No experiences added yet.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {experiences.map((exp, idx) => (
-                    <li key={idx} style={{ marginBottom: 16, background: '#f8fafc', borderRadius: 8, padding: 12, border: '1px solid var(--color-border)' }}>
-                      <div style={{ fontWeight: 600, color: 'var(--color-text)', fontSize: 16 }}>{exp.title}</div>
-                      <div style={{ color: 'var(--color-label)', fontSize: 15, marginTop: 2 }}>{exp.description}</div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          )}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={handleAddExperience}
+            style={{
+              padding: '0.5rem 1.2rem',
+              borderRadius: 6,
+              background: 'var(--color-primary)',
+              color: '#fff',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: 'pointer',
+              marginTop: 8,
+            }}
+          >
+            Add Experience
+          </button>
         </div>
         <button
           type="submit"
