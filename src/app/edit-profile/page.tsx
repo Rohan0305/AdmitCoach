@@ -33,42 +33,20 @@ export default function EditProfilePage() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
 
   const {loading, userData} = getUserData();
-  console.log("HERE: ", userData)
 
-  // // Fetch user data
-  // useEffect(() => {
-  //   const fetchProfile = async () => {
-  //     const auth = getAuth(app);
-  //     const db = getFirestore(app);
-  //     const user = auth.currentUser;
-  //     if (!user) {
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     try {
-  //       const userDoc = await getDoc(doc(db, 'users', user.uid));
-  //       if (userDoc.exists()) {
-  //         const data = userDoc.data();
-  //         setFirstName(data.firstName || '');
-  //         setLastName(data.lastName || '');
-  //         setEmail(data.email || '');
-  //         setProgram(data.programType || '');
-  //         setProgramInput(data.programType || '');
-  //         setUndergrad(data.undergraduateSchool || '');
-  //         setUndergradInput(data.undergraduateSchool || '');
-  //         setGpa(data.gpa ? String(data.gpa) : '4.0');
-  //         setExperiences(data.experiences || []);
-  //       }
-  //     } catch (err) {
-  //       setError('Failed to load profile.');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchProfile();
-  // }, []);
-
-
+  useEffect(() => {
+    if (userData) {
+      setFirstName(userData.firstName ?? "");
+      setLastName(userData.lastName ?? "");
+      setEmail(userData.email ?? "");
+      setProgram(userData.programType ?? "");
+      setProgramInput(userData.programType ?? "");
+      setUndergrad(userData.undergraduateSchool ?? "");
+      setUndergradInput(userData.undergraduateSchool ?? "");
+      setGpa(userData.gpa !== undefined ? String(userData.gpa) : "4.0");
+      setExperiences(userData.experiences ?? []);
+    }
+  }, [userData]);
 
   // Dropdown logic (same as profile page)
   useEffect(() => {
@@ -85,6 +63,7 @@ export default function EditProfilePage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -116,6 +95,9 @@ export default function EditProfilePage() {
       ...prev,
       { role: '', organization: '', startDate: '', endDate: '', description: '' }
     ]);
+  };
+  const handleDeleteExperience = (idx: number) => {
+    setExperiences(prev => prev.filter((_, i) => i !== idx));
   };
 
   // Save handler
@@ -337,6 +319,14 @@ export default function EditProfilePage() {
                   style={{ padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, minHeight: 60, resize: 'vertical', marginBottom: 4, background: '#fff', color: 'var(--color-text)', outline: 'none', width: '100%' }}
                   maxLength={400}
                 />
+                <button
+                  type="button"
+                  onClick={() => handleDeleteExperience(idx)}
+                  style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 0.75rem', fontWeight: 600, cursor: 'pointer', marginLeft: 4 }}
+                  aria-label="Delete Experience"
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>

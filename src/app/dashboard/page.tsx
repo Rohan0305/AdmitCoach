@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../../firebase';
 import Link from 'next/link';
@@ -55,6 +55,12 @@ export default function DashboardPage() {
 
     fetchProfile();
   }, [user]);
+
+  const handleLogout = async () => {
+    const auth = getAuth(app);
+    await signOut(auth);
+    window.location.href = '/login';
+  };
 
   if (userLoading || loading) {
     return (
@@ -116,17 +122,22 @@ export default function DashboardPage() {
           <h1 style={{ color: 'var(--color-text)', fontSize: 32, fontWeight: 700, margin: 0 }}>
             Welcome back, {profile?.firstName || user.firstName}!
           </h1>
-          <Link href="/edit-profile" style={{
-            background: 'var(--color-primary)',
-            color: '#fff',
-            padding: '0.5rem 1rem',
-            borderRadius: 6,
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600,
-          }}>
-            Edit Profile
-          </Link>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: '#ef4444',
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: 6,
+              border: 'none',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginLeft: 12,
+            }}
+          >
+            Log Out
+          </button>
         </div>
 
         {error && (
@@ -185,6 +196,19 @@ export default function DashboardPage() {
             <h2 style={{ color: 'var(--color-text)', fontSize: 24, fontWeight: 600, margin: '0 0 1.5rem 0' }}>
               Your Profile
             </h2>
+            <Link href="/edit-profile" style={{
+              background: 'var(--color-primary)',
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: 6,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 600,
+              marginBottom: '1.5rem',
+              display: 'inline-block',
+            }}>
+              Edit Profile
+            </Link>
             
             <div style={{ display: 'grid', gap: '1rem' }}>
               <div style={{ display: 'flex', gap: '1rem' }}>

@@ -1,7 +1,33 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { app } from '../../firebase';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const auth = getAuth(app);
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Failed to log in");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -13,6 +39,7 @@ export default function LoginPage() {
       }}
     >
       <form
+        onSubmit={handleSubmit}
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -43,6 +70,8 @@ export default function LoginPage() {
           <h2 style={{ textAlign: 'center', color: 'var(--color-text)', fontWeight: 700, fontSize: 28, margin: 0 }}>AdmitCoach</h2>
           <p style={{ color: 'var(--color-label)', fontSize: 16, marginTop: 4 }}>Sign in to your account</p>
         </div>
+        {error && <div style={{ color: '#ef4444', textAlign: 'center', fontSize: 15 }}>{error}</div>}
+        {loading && <div style={{ color: '#0ea5e9', textAlign: 'center', fontSize: 15 }}>Logging in...</div>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <label htmlFor="email" style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Email</label>
           <input
@@ -50,6 +79,8 @@ export default function LoginPage() {
             id="email"
             name="email"
             required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
             style={{
               padding: '0.75rem',
               borderRadius: 8,
@@ -67,6 +98,8 @@ export default function LoginPage() {
             id="password"
             name="password"
             required
+            value={password}
+            onChange={e => setPassword(e.target.value)}
             style={{
               padding: '0.75rem',
               borderRadius: 8,
@@ -93,6 +126,7 @@ export default function LoginPage() {
             marginTop: 8,
             transition: 'background 0.2s',
           }}
+          disabled={loading}
         >
           Login
         </button>

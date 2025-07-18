@@ -1,7 +1,6 @@
 import { app } from "@/firebase";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
-import React from "react";
 import { useEffect, useState } from "react";
 
 const getUserData = () => {
@@ -9,25 +8,32 @@ const getUserData = () => {
   const [userData, setUserData] = useState<any>(undefined);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-      const user = auth.currentUser;
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        console.log("HERE!!!!")
         setLoading(false);
+        setUserData(null);
         return;
       }
+      
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-            setUserData(userDoc.data())
+          setUserData(userDoc.data());
+        } else {
+          setUserData(null);
         }
       } catch (err) {
-        
+        console.error("Error fetching user data:", err);
+        setUserData(null);
+      } finally {
+        setLoading(false);
       }
-    };
-    fetchUserData();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return {loading, userData};

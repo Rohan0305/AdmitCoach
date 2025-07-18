@@ -116,6 +116,11 @@ export default function ProfilePage() {
     ]);
   };
 
+  // Add handler to delete experience at index
+  const handleDeleteExperience = (idx: number) => {
+    setExperiences(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccess('');
@@ -350,117 +355,60 @@ export default function ProfilePage() {
             maxLength={4}
           />
         </div>
-        <div style={{ marginTop: 24 }}>
-          <h3 style={{ color: 'var(--color-text)', fontWeight: 600, fontSize: 20, marginBottom: 8 }}>Experiences</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {experiences.map((exp, idx) => (
-              <li key={idx} style={{ marginBottom: 16, background: '#f8fafc', borderRadius: 8, padding: 12, border: '1px solid var(--color-border)' }}>
-                <input
-                  type="text"
-                  placeholder="Role (e.g. Research Assistant)"
-                  value={exp.role}
-                  onChange={e => handleExperienceChange(idx, 'role', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    borderRadius: 6,
-                    border: '1.5px solid var(--color-border)',
-                    fontSize: 15,
-                    marginBottom: 4,
-                    background: '#fff',
-                    color: 'var(--color-text)',
-                    outline: 'none',
-                    width: '100%',
-                  }}
-                  maxLength={60}
-                />
-                <input
-                  type="text"
-                  placeholder="Organization (e.g. Harvard University)"
-                  value={exp.organization}
-                  onChange={e => handleExperienceChange(idx, 'organization', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    borderRadius: 6,
-                    border: '1.5px solid var(--color-border)',
-                    fontSize: 15,
-                    marginBottom: 4,
-                    background: '#fff',
-                    color: 'var(--color-text)',
-                    outline: 'none',
-                    width: '100%',
-                  }}
-                  maxLength={60}
-                />
-                <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                  <input
-                    type="date"
-                    placeholder="Start Date"
-                    value={exp.startDate}
-                    onChange={e => handleExperienceChange(idx, 'startDate', e.target.value)}
-                    style={{
-                      padding: '0.5rem',
-                      borderRadius: 6,
-                      border: '1.5px solid var(--color-border)',
-                      fontSize: 15,
-                      background: '#fff',
-                      color: 'var(--color-text)',
-                      outline: 'none',
-                      flex: 1,
-                    }}
-                  />
-                  <input
-                    type="date"
-                    placeholder="End Date"
-                    value={exp.endDate}
-                    onChange={e => handleExperienceChange(idx, 'endDate', e.target.value)}
-                    style={{
-                      padding: '0.5rem',
-                      borderRadius: 6,
-                      border: '1.5px solid var(--color-border)',
-                      fontSize: 15,
-                      background: '#fff',
-                      color: 'var(--color-text)',
-                      outline: 'none',
-                      flex: 1,
-                    }}
-                  />
-                </div>
-                <textarea
-                  placeholder="Description (e.g. Conducted research on ... )"
-                  value={exp.description}
-                  onChange={e => handleExperienceChange(idx, 'description', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    borderRadius: 6,
-                    border: '1.5px solid var(--color-border)',
-                    fontSize: 15,
-                    minHeight: 60,
-                    resize: 'vertical',
-                    marginBottom: 4,
-                    background: '#fff',
-                    color: 'var(--color-text)',
-                    outline: 'none',
-                    width: '100%',
-                  }}
-                  maxLength={400}
-                />
-              </li>
-            ))}
-          </ul>
+        {/* Experiences Section */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <label style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Experiences</label>
+          {experiences.map((exp, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8 }}>
+              <input
+                type="text"
+                placeholder="Role"
+                value={exp.role}
+                onChange={e => handleExperienceChange(idx, 'role', e.target.value)}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
+              />
+              <input
+                type="text"
+                placeholder="Organization"
+                value={exp.organization}
+                onChange={e => handleExperienceChange(idx, 'organization', e.target.value)}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
+              />
+              <input
+                type="text"
+                placeholder="Start Date"
+                value={exp.startDate}
+                onChange={e => handleExperienceChange(idx, 'startDate', e.target.value)}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
+              />
+              <input
+                type="text"
+                placeholder="End Date"
+                value={exp.endDate}
+                onChange={e => handleExperienceChange(idx, 'endDate', e.target.value)}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
+              />
+              <input
+                type="text"
+                placeholder="Description"
+                value={exp.description}
+                onChange={e => handleExperienceChange(idx, 'description', e.target.value)}
+                style={{ flex: 2, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
+              />
+              <button
+                type="button"
+                onClick={() => handleDeleteExperience(idx)}
+                style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 0.75rem', fontWeight: 600, cursor: 'pointer', marginLeft: 4 }}
+                aria-label="Delete Experience"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
           <button
             type="button"
             onClick={handleAddExperience}
-            style={{
-              padding: '0.5rem 1.2rem',
-              borderRadius: 6,
-              background: 'var(--color-primary)',
-              color: '#fff',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: 'pointer',
-              marginTop: 8,
-            }}
+            style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer', marginTop: 4, alignSelf: 'flex-start' }}
           >
             Add Experience
           </button>
