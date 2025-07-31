@@ -303,7 +303,7 @@ export default function DashboardPage() {
               Start Mock Interview
             </Link>
             
-            <Link href="/history" style={{
+            <Link href="/previous-interviews" style={{
               display: 'block',
               background: '#f1f5f9',
               color: 'var(--color-text)',

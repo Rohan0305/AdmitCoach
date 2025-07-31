@@ -358,41 +358,41 @@ export default function ProfilePage() {
         {/* Experiences Section */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <label style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Experiences</label>
-          {experiences.map((exp, idx) => (
+            {experiences.map((exp, idx) => (
             <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8 }}>
-              <input
-                type="text"
+                <input
+                  type="text"
                 placeholder="Role"
-                value={exp.role}
-                onChange={e => handleExperienceChange(idx, 'role', e.target.value)}
+                  value={exp.role}
+                  onChange={e => handleExperienceChange(idx, 'role', e.target.value)}
                 style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
-              />
-              <input
-                type="text"
+                />
+                <input
+                  type="text"
                 placeholder="Organization"
-                value={exp.organization}
-                onChange={e => handleExperienceChange(idx, 'organization', e.target.value)}
+                  value={exp.organization}
+                  onChange={e => handleExperienceChange(idx, 'organization', e.target.value)}
                 style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
               />
-              <input
+                  <input
                 type="text"
-                placeholder="Start Date"
-                value={exp.startDate}
-                onChange={e => handleExperienceChange(idx, 'startDate', e.target.value)}
+                    placeholder="Start Date"
+                    value={exp.startDate}
+                    onChange={e => handleExperienceChange(idx, 'startDate', e.target.value)}
                 style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
-              />
-              <input
+                  />
+                  <input
                 type="text"
-                placeholder="End Date"
-                value={exp.endDate}
-                onChange={e => handleExperienceChange(idx, 'endDate', e.target.value)}
+                    placeholder="End Date"
+                    value={exp.endDate}
+                    onChange={e => handleExperienceChange(idx, 'endDate', e.target.value)}
                 style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
               />
               <input
                 type="text"
                 placeholder="Description"
-                value={exp.description}
-                onChange={e => handleExperienceChange(idx, 'description', e.target.value)}
+                  value={exp.description}
+                  onChange={e => handleExperienceChange(idx, 'description', e.target.value)}
                 style={{ flex: 2, padding: '0.5rem', borderRadius: 6, border: '1.5px solid var(--color-border)', fontSize: 15, background: '#fff', color: 'var(--color-text)' }}
               />
               <button
