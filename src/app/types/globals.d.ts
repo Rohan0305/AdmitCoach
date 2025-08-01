@@ -11,3 +11,34 @@ type User = {
   lastName: string;
   email: string;
 };
+
+type Question ={
+  id: number;
+  type: string;
+  question: string;
+}
+
+type Feedback = {
+  text: string;
+  contentScore: number | null;
+  deliveryScore: number | null;
+  structureScore: number | null;
+  overallScore: number | null;
+}
+
+type Answer = {
+  audioURL: string | null;
+  feedback: Feedback | null;
+  question: string;
+  questionId: number;
+}
+
+type InterviewSession = {
+  id: string;
+  date: string;
+  programType: string;
+  answers: Answer[];
+  totalQuestions: number;
+  completedQuestions: number;
+  userId: string;
+}
