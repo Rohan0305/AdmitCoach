@@ -34,14 +34,14 @@ export default function SignupPage() {
       const db = getFirestore(app);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      // Save extra info in Firestore
+
       await setDoc(doc(db, 'users', user.uid), {
         firstName,
         lastName,
         email,
         createdAt: new Date().toISOString(),
       });
-      // Redirect to profile setup page
+
       router.push('/setup-profile');
     } catch (err: any) {
       setError(err.message || 'Failed to create account');

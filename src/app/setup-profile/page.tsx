@@ -4,7 +4,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { app } from '../../firebase';
 import universities from '../../data/universities.json';
 import { ProgramOptions } from '@/constants/programOptions';
@@ -28,22 +28,16 @@ export default function ProfilePage() {
   const [showUndergradOptions, setShowUndergradOptions] = useState(false);
   const undergradInputRef = useRef<HTMLInputElement>(null);
   const undergradOptionsRef = useRef<HTMLDivElement>(null);
-  const [gpa, setGpa] = useState('4.0');
-
-  // Experiences state
   const [experiences, setExperiences] = useState<Experience[]>([]);
 
-  // Filter options based on input
   const filteredOptions = ProgramOptions.filter(option =>
     option.value.toLowerCase().includes(programInput.toLowerCase())
   ).map(option => option.value);
 
-  // Filter universities based on input
   const filteredUniversities = universities.filter((u: string) =>
     u.toLowerCase().includes(undergradInput.toLowerCase())
   );
 
-  // Handle click outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -59,7 +53,6 @@ export default function ProfilePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle click outside to close undergrad dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -99,16 +92,12 @@ export default function ProfilePage() {
     setUndergrad('');
   };
 
-  const handleGpaChange = (value: string) => {
-    setGpa(value);
-  };
 
-  // Add handler to update experience at index
+
   const handleExperienceChange = (idx: number, field: string, value: string) => {
     setExperiences(prev => prev.map((exp, i) => i === idx ? { ...exp, [field]: value } : exp));
   };
 
-  // Add handler to add new empty experience
   const handleAddExperience = () => {
     setExperiences(prev => [
       ...prev,
@@ -116,7 +105,6 @@ export default function ProfilePage() {
     ]);
   };
 
-  // Add handler to delete experience at index
   const handleDeleteExperience = (idx: number) => {
     setExperiences(prev => prev.filter((_, i) => i !== idx));
   };
@@ -133,12 +121,6 @@ export default function ProfilePage() {
       setError('Please select your undergraduate school.');
       return;
     }
-    const gpaNum = parseFloat(gpa);
-    if (isNaN(gpaNum) || gpaNum < 0 || gpaNum > 4) {
-      setError('GPA must be a number between 0 and 4.0');
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -152,16 +134,14 @@ export default function ProfilePage() {
       await updateDoc(doc(db, 'users', user.uid), {
         programType: program,
         undergraduateSchool: undergrad,
-        gpa: gpaNum,
         experiences: experiences,
         profileCompleted: true,
         lastUpdated: new Date(),
       });
       setSuccess('Profile updated!');
-      // Redirect to dashboard after successful save
       setTimeout(() => {
         router.push('/dashboard');
-      }, 1500); // Wait 1.5 seconds to show success message
+      }, 1500);
     } catch (err) {
       setError('Failed to update profile.');
     }
@@ -331,30 +311,7 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label htmlFor="gpa" style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15, marginBottom: 4 }}>
-            GPA
-          </label>
-          <input
-            id="gpa"
-            type="text"
-            value={gpa}
-            onChange={e => handleGpaChange(e.target.value)}
-            placeholder="e.g. 3.7"
-            style={{
-              width: 80,
-              textAlign: 'center',
-              padding: '0.5rem',
-              borderRadius: 8,
-              border: '1.5px solid var(--color-border)',
-              fontSize: 16,
-              outline: 'none',
-              background: '#fff',
-              color: 'var(--color-text)',
-            }}
-            maxLength={4}
-          />
-        </div>
+
         {/* Experiences Section */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <label style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Experiences</label>

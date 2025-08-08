@@ -10,6 +10,11 @@ type User = {
   firstName: string;
   lastName: string;
   email: string;
+  programType?: string;
+  undergraduateSchool?: string;
+  experiences?: Experience[];
+  profileCompleted?: boolean;
+  lastUpdated?: Date;
 };
 
 type Question ={

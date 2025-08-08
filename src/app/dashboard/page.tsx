@@ -1,60 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { getAuth, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../../firebase';
 import Link from 'next/link';
 import getAuthUser from '../hooks/getUser';
 import useAuthUser from '../zustand/useAuthUser';
 
-interface UserProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  programType?: string;
-  undergraduateSchool?: string;
-  gpa?: number;
-  experiences?: Experience[];
-  profileCompleted?: boolean;
-  lastUpdated?: Date;
-}
 
 export default function DashboardPage() {
   const { user } = useAuthUser();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const { userLoading } = getAuthUser();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) return;
-      
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-      const currentUser = auth.currentUser;
-      
-      if (!currentUser) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) {
-          setProfile(userDoc.data() as UserProfile);
-        }
-      } catch (err) {
-        setError('Failed to load profile.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
 
   const handleLogout = async () => {
     const auth = getAuth(app);
@@ -62,7 +19,7 @@ export default function DashboardPage() {
     window.location.href = '/login';
   };
 
-  if (userLoading || loading) {
+  if (userLoading) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -120,7 +77,7 @@ export default function DashboardPage() {
           marginBottom: '2rem',
         }}>
           <h1 style={{ color: 'var(--color-text)', fontSize: 32, fontWeight: 700, margin: 0 }}>
-            Welcome back, {profile?.firstName || user.firstName}!
+            Welcome back, {user?.firstName}!
           </h1>
           <button
             onClick={handleLogout}
@@ -140,20 +97,10 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {error && (
-          <div style={{ 
-            background: '#fee2e2', 
-            color: '#dc2626', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            marginBottom: '1rem' 
-          }}>
-            {error}
-          </div>
-        )}
+
 
         {/* Profile Status */}
-        {!profile?.profileCompleted && (
+        {!user?.profileCompleted && (
           <div style={{
             background: '#fef3c7',
             border: '1px solid #f59e0b',
@@ -184,7 +131,7 @@ export default function DashboardPage() {
         )}
 
         {/* Profile Information */}
-        {profile?.profileCompleted && (
+        {user?.profileCompleted && (
           <div style={{
             background: 'var(--color-card-bg)',
             borderRadius: 12,
@@ -211,25 +158,17 @@ export default function DashboardPage() {
             </Link>
             
             <div style={{ display: 'grid', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ color: 'var(--color-label)', fontSize: 14, fontWeight: 500 }}>Program Type</label>
-                  <div style={{ color: 'var(--color-text)', fontSize: 16, marginTop: 4 }}>
-                    {profile.programType || 'Not specified'}
-                  </div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ color: 'var(--color-label)', fontSize: 14, fontWeight: 500 }}>GPA</label>
-                  <div style={{ color: 'var(--color-text)', fontSize: 16, marginTop: 4 }}>
-                    {profile.gpa || 'Not specified'}
-                  </div>
+              <div>
+                <label style={{ color: 'var(--color-label)', fontSize: 14, fontWeight: 500 }}>Program Type</label>
+                <div style={{ color: 'var(--color-text)', fontSize: 16, marginTop: 4 }}>
+                  {user.programType || 'Not specified'}
                 </div>
               </div>
               
               <div>
                 <label style={{ color: 'var(--color-label)', fontSize: 14, fontWeight: 500 }}>Undergraduate School</label>
                 <div style={{ color: 'var(--color-text)', fontSize: 16, marginTop: 4 }}>
-                  {profile.undergraduateSchool || 'Not specified'}
+                  {user.undergraduateSchool || 'Not specified'}
                 </div>
               </div>
             </div>
@@ -237,7 +176,7 @@ export default function DashboardPage() {
         )}
 
         {/* Experiences */}
-        {profile?.experiences && profile.experiences.length > 0 && (
+        {user?.experiences && user.experiences.length > 0 && (
           <div style={{
             background: 'var(--color-card-bg)',
             borderRadius: 12,
@@ -251,7 +190,7 @@ export default function DashboardPage() {
             </h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {profile.experiences.map((exp, idx) => (
+              {user.experiences.map((exp, idx) => (
                 <div key={idx} style={{
                   background: '#f8fafc',
                   borderRadius: 8,

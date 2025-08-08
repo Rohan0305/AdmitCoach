@@ -2,15 +2,16 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { app } from '../../firebase';
 import universities from '../../data/universities.json';
 import { ProgramOptions } from '@/constants/programOptions';
 import { useRouter } from 'next/navigation';
-import getUserData from '../hooks/getUserData';
+import useAuthUser from '../zustand/useAuthUser';
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const { user, setUser } = useAuthUser();
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -29,24 +30,20 @@ export default function EditProfilePage() {
   const [showUndergradOptions, setShowUndergradOptions] = useState(false);
   const undergradInputRef = useRef<HTMLInputElement>(null);
   const undergradOptionsRef = useRef<HTMLDivElement>(null);
-  const [gpa, setGpa] = useState('4.0');
   const [experiences, setExperiences] = useState<Experience[]>([]);
 
-  const {loading, userData} = getUserData();
-
   useEffect(() => {
-    if (userData) {
-      setFirstName(userData.firstName ?? "");
-      setLastName(userData.lastName ?? "");
-      setEmail(userData.email ?? "");
-      setProgram(userData.programType ?? "");
-      setProgramInput(userData.programType ?? "");
-      setUndergrad(userData.undergraduateSchool ?? "");
-      setUndergradInput(userData.undergraduateSchool ?? "");
-      setGpa(userData.gpa !== undefined ? String(userData.gpa) : "4.0");
-      setExperiences(userData.experiences ?? []);
+    if (user) {
+      setFirstName(user.firstName ?? "");
+      setLastName(user.lastName ?? "");
+      setEmail(user.email ?? "");
+      setProgram(user.programType ?? "");
+      setProgramInput(user.programType ?? "");
+      setUndergrad(user.undergraduateSchool ?? "");
+      setUndergradInput(user.undergraduateSchool ?? "");
+      setExperiences(user.experiences ?? []);
     }
-  }, [userData]);
+  }, [user]);
 
   // Dropdown logic (same as profile page)
   useEffect(() => {
@@ -117,11 +114,6 @@ export default function EditProfilePage() {
       setError('Please select your undergraduate school.');
       return;
     }
-    const gpaNum = parseFloat(gpa);
-    if (isNaN(gpaNum) || gpaNum < 0 || gpaNum > 4) {
-      setError('GPA must be a number between 0 and 4.0');
-      return;
-    }
     setSaving(true);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -132,30 +124,33 @@ export default function EditProfilePage() {
       return;
     }
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      const updatedUserData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
         programType: program,
         undergraduateSchool: undergrad,
-        gpa: gpaNum,
         experiences: experiences,
         profileCompleted: true,
         lastUpdated: new Date(),
-      });
+      };
+      
+      await updateDoc(doc(db, 'users', user.uid), updatedUserData);
+      
+      // Update Zustand store with new data
+      setUser(updatedUserData);
+      
       setSuccess('Profile updated!');
       setTimeout(() => {
         router.push('/dashboard');
       }, 1500);
-    } catch (err) {
+    } catch {
       setError('Failed to update profile.');
     }
     setSaving(false);
   };
 
-  if (loading) {
-    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-gradient)' }}>Loading...</div>;
-  }
+
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-gradient)' }}>
@@ -266,14 +261,7 @@ export default function EditProfilePage() {
             </div>
           )}
         </div>
-        <input
-          type="text"
-          placeholder="GPA (e.g. 3.7)"
-          value={gpa}
-          onChange={e => setGpa(e.target.value)}
-          style={{ width: 80, textAlign: 'center', padding: '0.5rem', borderRadius: 8, border: '1.5px solid var(--color-border)', fontSize: 16, outline: 'none', background: '#fff', color: 'var(--color-text)' }}
-          maxLength={4}
-        />
+
         {/* Experiences section (same as profile page, editable) */}
         <div style={{ marginTop: 24 }}>
           <h3 style={{ color: 'var(--color-text)', fontWeight: 600, fontSize: 20, marginBottom: 8 }}>Experiences</h3>
