@@ -23,8 +23,6 @@ export const getInterviewSessions = async (userId: string): Promise<InterviewSes
     querySnapshot.forEach((doc) => {
       sessions.push(doc.data() as InterviewSession);
     });
-    
-    // Sort in JavaScript instead of Firestore
     sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
     return sessions;
@@ -34,7 +32,6 @@ export const getInterviewSessions = async (userId: string): Promise<InterviewSes
   }
 };
 
-// Get a specific interview session by ID
 export const getInterviewSession = async (sessionId: string): Promise<InterviewSession | null> => {
   try {
     const db = getFirestore(app);
@@ -50,7 +47,6 @@ export const getInterviewSession = async (sessionId: string): Promise<InterviewS
   }
 };
 
-// Delete an interview session
 export const deleteInterviewSession = async (sessionId: string): Promise<void> => {
   try {
     const db = getFirestore(app);
@@ -61,7 +57,6 @@ export const deleteInterviewSession = async (sessionId: string): Promise<void> =
   }
 };
 
-// Generate a unique session ID
 export const generateSessionId = (): string => {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }; 

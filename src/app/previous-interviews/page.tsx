@@ -22,11 +22,10 @@ export default function PreviousInterviewsPage() {
           const userSessions = await getInterviewSessions(currentUser.uid);
           setSessions(userSessions);
           
-          // If there are sessions and user just completed an interview, show the most recent one
           if (userSessions.length > 0) {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('showLatest') === 'true') {
-              setSelectedSession(userSessions[0]); // Most recent session
+              setSelectedSession(userSessions[0]);
             }
           }
         }

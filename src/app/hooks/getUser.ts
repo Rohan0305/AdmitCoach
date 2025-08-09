@@ -1,5 +1,5 @@
 import { app } from "@/firebase";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import useAuthUser from "../zustand/useAuthUser";
@@ -9,29 +9,32 @@ const getAuthUser = () => {
   const [userLoading, setUserLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-      const user = auth.currentUser;
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        setUser(null)
+        setUser(null);
         setUserLoading(false);
         return;
       }
+      
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
+          setUser(userDoc.data() as User);
         } else {
-            setUser(null);
+          setUser(null);
         }
-      } catch (err) {
+      } catch {
         setUser(null);
       }
       setUserLoading(false);
-    };
-    fetchUserData();
-  }, []);
+    });
+
+    return () => unsubscribe();
+  }, [setUser]);
+  
   return { userLoading };
 };
 

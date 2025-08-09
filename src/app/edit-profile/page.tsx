@@ -16,7 +16,6 @@ export default function EditProfilePage() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
-  // Editable fields
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -45,7 +44,6 @@ export default function EditProfilePage() {
     }
   }, [user]);
 
-  // Dropdown logic (same as profile page)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -83,7 +81,6 @@ export default function EditProfilePage() {
     u.toLowerCase().includes(undergradInput.toLowerCase())
   );
 
-  // Experience editing logic
   const handleExperienceChange = (idx: number, field: string, value: string) => {
     setExperiences(prev => prev.map((exp, i) => i === idx ? { ...exp, [field]: value } : exp));
   };
@@ -97,7 +94,6 @@ export default function EditProfilePage() {
     setExperiences(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // Save handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccess('');
@@ -137,7 +133,6 @@ export default function EditProfilePage() {
       
       await updateDoc(doc(db, 'users', user.uid), updatedUserData);
       
-      // Update Zustand store with new data
       setUser(updatedUserData);
       
       setSuccess('Profile updated!');

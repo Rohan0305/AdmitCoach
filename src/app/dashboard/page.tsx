@@ -4,14 +4,10 @@ import React from 'react';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '../../firebase';
 import Link from 'next/link';
-import getAuthUser from '../hooks/getUser';
 import useAuthUser from '../zustand/useAuthUser';
-
 
 export default function DashboardPage() {
   const { user } = useAuthUser();
-
-  const { userLoading } = getAuthUser();
 
   const handleLogout = async () => {
     const auth = getAuth(app);
@@ -19,41 +15,18 @@ export default function DashboardPage() {
     window.location.href = '/login';
   };
 
-  if (userLoading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--color-bg-gradient)',
-      }}>
-        <div style={{ color: 'var(--color-text)', fontSize: 18 }}>Loading...</div>
-      </div>
-    );
-  }
-
   if (!user) {
     return (
       <div style={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'var(--color-bg-gradient)',
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ color: 'var(--color-text)', marginBottom: 16 }}>Please log in</h2>
-          <Link href="/login" style={{
-            background: 'var(--color-primary)',
-            color: '#fff',
-            padding: '0.75rem 1.5rem',
-            borderRadius: 8,
-            textDecoration: 'none',
-            fontWeight: 600,
-          }}>
-            Go to Login
-          </Link>
+        <div style={{ color: 'var(--color-text)', fontSize: 18, marginBottom: 16 }}>
+          Loading...
         </div>
       </div>
     );
@@ -97,9 +70,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-
-
-        {/* Profile Status */}
         {!user?.profileCompleted && (
           <div style={{
             background: '#fef3c7',
@@ -130,7 +100,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Profile Information */}
         {user?.profileCompleted && (
           <div style={{
             background: 'var(--color-card-bg)',
@@ -175,7 +144,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Experiences */}
         {user?.experiences && user.experiences.length > 0 && (
           <div style={{
             background: 'var(--color-card-bg)',

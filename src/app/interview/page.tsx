@@ -3,9 +3,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth } from "firebase/auth";
-import questions from "@/data/questions_medical_school.json";
+import medical_schoolquestions from "@/data/questions_medical_school.json";
 import { saveInterviewSession, generateSessionId } from '@/utils/interviewStorage';
 import { app } from '@/firebase';
+import useAuthUser from '../zustand/useAuthUser';
+import getAuthUser from "../hooks/getUser";
 
 function getRandomQuestions(arr: Question[], n: number): Question[] {
   const shuffled = arr.slice().sort(() => 0.5 - Math.random());
@@ -13,6 +15,9 @@ function getRandomQuestions(arr: Question[], n: number): Question[] {
 }
 
 export default function InterviewPage() {
+  const {userLoading} = getAuthUser();
+  const { user } = useAuthUser();
+  console.log("USER ", user);
   const router = useRouter();
   const [curated, setCurated] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
@@ -27,7 +32,7 @@ export default function InterviewPage() {
   const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
-    setCurated(getRandomQuestions(questions as Question[], 2));
+    setCurated(getRandomQuestions(medical_schoolquestions as Question[], 2));
     setSessionId(generateSessionId());
   }, []);
 
@@ -45,7 +50,6 @@ export default function InterviewPage() {
       setAudioURL(url);
       setHasRecorded(true);
 
-      // Store the answer immediately (without feedback for now)
       const newAnswer: Answer = {
         audioURL: url,
         feedback: null,
@@ -62,6 +66,8 @@ export default function InterviewPage() {
     mediaRecorderRef.current?.stop();
     setRecording(false);
   };
+
+  console.log("USER ", user);
 
   const nextQuestion = async () => {
     setAudioURL(null);
@@ -101,7 +107,6 @@ export default function InterviewPage() {
           }
         }
         
-        // Save the session with all feedback
         const auth = getAuth(app);
         const currentUser = auth.currentUser;
         

@@ -8,7 +8,6 @@ import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { app } from '../../firebase';
 import universities from '../../data/universities.json';
 import { ProgramOptions } from '@/constants/programOptions';
-import getAuthUser from '../hooks/getUser';
 import useAuthUser from '../zustand/useAuthUser';
 import { useRouter } from 'next/navigation';
 
@@ -148,8 +147,6 @@ export default function ProfilePage() {
     setLoading(false);
   };
 
-  const {userLoading} = getAuthUser();
-
   return (
     <div
       style={{
@@ -175,7 +172,7 @@ export default function ProfilePage() {
         }}
       >
         <h1 style={{ textAlign: 'center', color: 'var(--color-text)', fontWeight: 700, fontSize: 28, margin: 0 }}>
-          {userLoading ? 'Loading...' : user?.firstName ? `Welcome, ${user.firstName}!` : 'Welcome!'}
+          {loading ? 'Loading...' : user?.firstName ? `Welcome, ${user.firstName}!` : 'Welcome!'}
         </h1>
         <h2 style={{ textAlign: 'center', color: 'var(--color-text)', fontWeight: 700, fontSize: 24, margin: 0 }}>Set Up Your Profile</h2>
         <p style={{ color: 'var(--color-label)', fontSize: 16, marginTop: 4, textAlign: 'center' }}>
