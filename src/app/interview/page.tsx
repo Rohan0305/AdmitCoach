@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { getAuth } from "firebase/auth";
-import medical_schoolquestions from "@/data/questions_medical_school.json";
 import { saveInterviewSession, generateSessionId } from '@/utils/interviewStorage';
+import { getQuestionsByProgram } from '@/utils/questionLoader';
 import { app } from '@/firebase';
 import useAuthUser from '../zustand/useAuthUser';
-import getAuthUser from "../hooks/getUser";
+import Link from "next/link";
 
 function getRandomQuestions(arr: Question[], n: number): Question[] {
   const shuffled = arr.slice().sort(() => 0.5 - Math.random());
@@ -15,10 +14,7 @@ function getRandomQuestions(arr: Question[], n: number): Question[] {
 }
 
 export default function InterviewPage() {
-  const {userLoading} = getAuthUser();
   const { user } = useAuthUser();
-  console.log("USER ", user);
-  const router = useRouter();
   const [curated, setCurated] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
   const [recording, setRecording] = useState(false);
@@ -32,9 +28,12 @@ export default function InterviewPage() {
   const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
-    setCurated(getRandomQuestions(medical_schoolquestions as Question[], 2));
-    setSessionId(generateSessionId());
-  }, []);
+    if (user?.programType) {
+      const questions = getQuestionsByProgram(user.programType);
+      setCurated(getRandomQuestions(questions, 2));
+      setSessionId(generateSessionId());
+    }
+  }, [user?.programType]);
 
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -95,6 +94,7 @@ export default function InterviewPage() {
             const formData = new FormData();
             formData.append("audio", audioBlob, "answer.mp4");
             formData.append("question", answer.question);
+            formData.append("programType", user?.programType || "Medical School");
 
             const res = await fetch("/api/grade-interview", {
               method: "POST",
@@ -115,7 +115,7 @@ export default function InterviewPage() {
           const session: InterviewSession = {
             id: sessionId,
             date: new Date().toISOString(),
-            programType: 'Medical School',
+            programType: user?.programType || 'Unknown',
             answers: updatedAnswers,
             totalQuestions: curated.length,
             completedQuestions: updatedAnswers.length,
@@ -128,7 +128,7 @@ export default function InterviewPage() {
           console.error('No authenticated user found');
           alert('Please log in to save your interview session.');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error processing feedback:', error);
         alert('Error processing AI feedback. Please try again.');
       } finally {
@@ -149,162 +149,125 @@ export default function InterviewPage() {
           justifyContent: "center",
         }}
       >
-        Loading questions...
+        {!user?.programType ? 'Loading your program information...' : 'Loading questions...'}
       </div>
     );
   }
 
   if (sessionDone) {
     return (
-      <div
-        style={{
-          maxWidth: 700,
-          margin: "40px auto",
+      <div style={{
+        minHeight: '100vh',
+        background: 'var(--color-bg-gradient)',
+        padding: '2rem'
+      }}>
+        <div style={{
+          maxWidth: 600,
+          margin: "0 auto",
           padding: 24,
-          background: "#fff",
+          background: "var(--color-card-bg)",
           borderRadius: 12,
-          boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
-        }}
-      >
-        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>
-          Interview Complete!
-        </h1>
-        
-        {processingFeedback ? (
-          <>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{ fontSize: 18, color: '#6366f1', marginBottom: 12 }}>
+          boxShadow: "var(--color-card-shadow)",
+          border: "1px solid var(--color-border)",
+          textAlign: "center"
+        }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16, color: 'var(--color-text)' }}>
+            Interview Complete!
+          </h1>
+          <p style={{ fontSize: 18, marginBottom: 24, color: 'var(--color-label)' }}>
+            Great job! Your interview session has been saved.
+          </p>
+          {processingFeedback ? (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ color: 'var(--color-text)', fontSize: 16, marginBottom: 12 }}>
                 🤖 AI is grading your responses...
               </div>
-              <div style={{ fontSize: 14, color: '#6b7280' }}>
-                This may take a few moments. Please wait.
+              <div style={{ color: 'var(--color-muted)', fontSize: 14 }}>
+                This may take a few moments
               </div>
             </div>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <button
-                disabled
-                style={{
-                  background: "#9ca3af",
-                  color: "#fff",
-                  padding: "0.7rem 1.5rem",
-                  border: "none",
-                  borderRadius: 8,
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "not-allowed",
-                }}
-              >
-                Processing AI Feedback...
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p style={{ marginBottom: 24 }}>
-              Great job completing your interview session! Your AI feedback is ready. Review your responses and feedback to improve your skills.
-            </p>
-
-            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button
-                onClick={() => router.push("/previous-interviews?showLatest=true")}
-                style={{
-                  background: "#6366f1",
-                  color: "#fff",
-                  padding: "0.7rem 1.5rem",
-                  border: "none",
-                  borderRadius: 8,
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                }}
-              >
-                View Interview Report
-              </button>
-              <button
-                onClick={() => {
-                  setCurrent(0);
-                  setAnswers([]);
-                  setSessionDone(false);
-                  setAudioURL(null);
-                  setHasRecorded(false);
-                }}
-                style={{
-                  background: "#0ea5e9",
-                  color: "#fff",
-                  padding: "0.7rem 1.5rem",
-                  border: "none",
-                  borderRadius: 8,
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                }}
-              >
-                Start New Interview
-              </button>
-            </div>
-          </>
-        )}
+          ) : (
+            <Link href="/previous-interviews?showLatest=true" style={{
+              background: 'var(--color-primary)',
+              color: '#fff',
+              padding: '0.7rem 1.5rem',
+              borderRadius: 8,
+              textDecoration: 'none',
+              fontWeight: 600,
+              display: 'inline-block',
+              transition: 'background-color 0.2s'
+            }}>
+              View Interview Report
+            </Link>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--color-bg-gradient)',
+      padding: '2rem'
+    }}>
+      <div style={{
         maxWidth: 600,
-        margin: "40px auto",
+        margin: "0 auto",
         padding: 24,
-        background: "#fff",
+        background: "var(--color-card-bg)",
         borderRadius: 12,
-        boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
-      }}
-    >
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>
-        Interview Practice
-      </h1>
-      <div style={{ marginBottom: 24 }}>
-        <strong>
-          Question {current + 1} of {curated.length}:
-        </strong>
-        <div style={{ fontSize: 20, margin: "16px 0" }}>
-          {curated[current].question}
+        boxShadow: "var(--color-card-shadow)",
+        border: "1px solid var(--color-border)"
+      }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16, color: 'var(--color-text)' }}>
+          {user?.programType || 'Interview'} Practice
+        </h1>
+        <div style={{ marginBottom: 24 }}>
+          <strong style={{ color: 'var(--color-label)' }}>
+            Question {current + 1} of {curated.length}:
+          </strong>
+          <div style={{ fontSize: 20, margin: "16px 0", color: 'var(--color-text)', lineHeight: 1.5 }}>
+            {curated[current].question}
+          </div>
         </div>
-      </div>
-      <div style={{ marginBottom: 16 }}>
-        {!recording ? (
-          <button
-            onClick={startRecording}
-            style={{
-              background: "#0ea5e9",
-              color: "#fff",
-              padding: "0.7rem 1.5rem",
-              border: "none",
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 16,
-              cursor: "pointer",
-            }}
-          >
-            Start Recording
-          </button>
-        ) : (
-          <button
-            onClick={stopRecording}
-            style={{
-              background: "#ef4444",
-              color: "#fff",
-              padding: "0.7rem 1.5rem",
-              border: "none",
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 16,
-              cursor: "pointer",
-            }}
-          >
-            Stop Recording
-          </button>
-        )}
-      </div>
+        <div style={{ marginBottom: 16 }}>
+          {!recording ? (
+            <button
+              onClick={startRecording}
+              style={{
+                background: "var(--color-primary)",
+                color: "#fff",
+                padding: "0.7rem 1.5rem",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: 16,
+                cursor: "pointer",
+                transition: "background-color 0.2s"
+              }}
+            >
+              Start Recording
+            </button>
+          ) : (
+            <button
+              onClick={stopRecording}
+              style={{
+                background: "#ef4444",
+                color: "#fff",
+                padding: "0.7rem 1.5rem",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: 16,
+                cursor: "pointer",
+                transition: "background-color 0.2s"
+              }}
+            >
+              Stop Recording
+            </button>
+          )}
+        </div>
       {audioURL && (
         <div style={{ marginBottom: 16 }}>
           <audio src={audioURL} controls />
@@ -313,21 +276,24 @@ export default function InterviewPage() {
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button
           onClick={nextQuestion}
+          disabled={!hasRecorded}
           style={{
-            background: hasRecorded ? "#6366f1" : "#9ca3af",
+            background: hasRecorded ? "var(--color-primary)" : "var(--color-muted)",
             color: "#fff",
-            padding: "0.6rem 1.2rem",
+            padding: "0.7rem 1.5rem",
             border: "none",
             borderRadius: 8,
             fontWeight: 600,
-            fontSize: 15,
+            fontSize: 16,
             cursor: hasRecorded ? "pointer" : "not-allowed",
+            opacity: hasRecorded ? 1 : 0.6,
+            transition: "all 0.2s"
           }}
-          disabled={!hasRecorded}
         >
           {current < curated.length - 1 ? "Next Question" : "Finish Interview"}
         </button>
       </div>
+    </div>
     </div>
   );
 }

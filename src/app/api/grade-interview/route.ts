@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const audio = formData.get("audio") as File;
   const question = formData.get("question") as string;
+  const programType = formData.get("programType") as string || "Medical School";
 
   // 1. Transcribe audio with OpenAI Whisper
   const transcriptResp = await openai.audio.transcriptions.create({
@@ -17,11 +18,11 @@ export async function POST(req: NextRequest) {
     response_format: "text",
     // language: 'en', // optional
   });
-  const transcript = (transcriptResp as any).text ?? transcriptResp;
+  const transcript = typeof transcriptResp === 'string' ? transcriptResp : (transcriptResp as { text: string }).text;
 
   // 2. Get AI feedback from OpenAI Chat API
   const prompt = `
-You are an expert medical school interview coach. Grade the following answer to the given question in four categories (0-10 each): Content, Delivery, Structure, and Overall. Provide a brief, actionable comment. Return your response as JSON in this format:
+You are an expert ${programType} interview coach. Grade the following answer to the given question in four categories (0-10 each): Content, Delivery, Structure, and Overall. Provide a brief, actionable comment. Return your response as JSON in this format:
 
 {
   "text": "Your answer was clear and relevant. Try to elaborate more on your personal motivation.",
@@ -40,7 +41,7 @@ Transcript: ${transcript}
     messages: [
       {
         role: "system",
-        content: "You are a helpful and strict medical school interview coach.",
+        content: `You are a helpful and strict ${programType} interview coach.`,
       },
       { role: "user", content: prompt },
     ],
@@ -60,7 +61,7 @@ Transcript: ${transcript}
           structureScore: null,
           overallScore: null,
         };
-  } catch (e) {
+  } catch {
     feedback = {
       text: chatResp.choices[0].message.content,
       contentScore: null,

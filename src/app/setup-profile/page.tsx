@@ -141,10 +141,11 @@ export default function ProfilePage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 1500);
-    } catch (err) {
+    } catch {
       setError('Failed to update profile.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
