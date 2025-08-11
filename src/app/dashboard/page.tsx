@@ -183,6 +183,68 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Credits Display */}
+        <div style={{
+          background: 'var(--color-card-bg)',
+          borderRadius: 12,
+          padding: '2rem',
+          marginBottom: '2rem',
+          boxShadow: 'var(--color-card-shadow)',
+          border: '1px solid var(--color-border)',
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+          }}>
+            <h2 style={{ color: 'var(--color-text)', fontSize: 24, fontWeight: 600, margin: 0 }}>
+              Interview Credits
+            </h2>
+            <Link href="/credits" style={{
+              background: 'var(--color-primary)',
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: 6,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 600,
+            }}>
+              Buy More Credits
+            </Link>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem',
+          }}>
+            <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--color-primary)' }}>
+              {user.credits || 0}
+            </div>
+            <div style={{ color: 'var(--color-label)', fontSize: 16 }}>
+              credits remaining
+            </div>
+          </div>
+          
+          {user.credits === 0 && (
+            <div style={{
+              background: '#fef3c7',
+              border: '1px solid #f59e0b',
+              borderRadius: 8,
+              padding: '1rem',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ color: '#92400e', fontSize: 16 }}>⚠️</span>
+                <span style={{ color: '#92400e', fontSize: 14 }}>
+                  No credits available. Purchase credits to start mock interviews.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Quick Actions */}
         <div style={{
           background: 'var(--color-card-bg)',
@@ -196,19 +258,36 @@ export default function DashboardPage() {
           </h2>
           
           <div style={{ display: 'grid', gap: '1rem' }}>
-            <Link href="/interview" style={{
-              display: 'block',
-              background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
-              color: '#fff',
-              padding: '1rem',
-              borderRadius: 8,
-              textDecoration: 'none',
-              textAlign: 'center',
-              fontWeight: 600,
-              fontSize: 16,
-            }}>
-              Start Mock Interview
-            </Link>
+            {user.credits && user.credits > 0 ? (
+              <Link href="/interview" style={{
+                display: 'block',
+                background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
+                color: '#fff',
+                padding: '1rem',
+                borderRadius: 8,
+                textDecoration: 'none',
+                textAlign: 'center',
+                fontWeight: 600,
+                fontSize: 16,
+              }}>
+                Start Mock Interview ({user.credits} credits available)
+              </Link>
+            ) : (
+              <div style={{
+                background: '#fef3c7',
+                border: '1px solid #f59e0b',
+                borderRadius: 8,
+                padding: '1rem',
+                textAlign: 'center',
+              }}>
+                <p style={{ color: '#92400e', margin: '0 0 0.5rem 0', fontSize: 14 }}>
+                  No credits available
+                </p>
+                <p style={{ color: '#92400e', margin: 0, fontSize: 12 }}>
+                  Purchase credits above to start a mock interview
+                </p>
+              </div>
+            )}
             
             <Link href="/previous-interviews" style={{
               display: 'block',

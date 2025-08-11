@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getAuth } from "firebase/auth";
 import { getInterviewSessions } from '@/utils/interviewStorage';
 import { app } from '@/firebase';
+import InterviewReport from '@/components/InterviewReport';
 
 
 export default function PreviousInterviewsPage() {
@@ -15,11 +16,21 @@ export default function PreviousInterviewsPage() {
   useEffect(() => {
     const loadSessions = async () => {
       try {
+        console.log('🔄 Starting to load sessions...');
+        setLoading(true);
+        
         const auth = getAuth(app);
+        console.log('🔐 Auth object:', auth);
+        
         const currentUser = auth.currentUser;
+        console.log('👤 Current user:', currentUser);
         
         if (currentUser) {
+          console.log('✅ User authenticated, loading sessions for:', currentUser.uid);
           const userSessions = await getInterviewSessions(currentUser.uid);
+          console.log('📊 Loaded sessions from Firestore:', userSessions);
+          console.log('📊 Sessions length:', userSessions.length);
+          
           setSessions(userSessions);
           
           if (userSessions.length > 0) {
@@ -28,15 +39,34 @@ export default function PreviousInterviewsPage() {
               setSelectedSession(userSessions[0]);
             }
           }
+        } else {
+          console.log('❌ No authenticated user found');
+          console.log('🔍 Auth state:', auth);
         }
       } catch (error) {
-        console.error('Error loading sessions:', error);
+        console.error('💥 Error loading sessions:', error);
+        setSessions([]);
       } finally {
+        console.log('🏁 Setting loading to false');
         setLoading(false);
       }
     };
 
-    loadSessions();
+    console.log('🚀 useEffect triggered, waiting for auth...');
+    
+    // Wait for auth state to be ready
+    const auth = getAuth(app);
+    const unsubscribe = auth.onAuthStateChanged((user: any) => {
+      console.log('🔐 Auth state changed:', user);
+      if (user) {
+        loadSessions();
+      } else {
+        console.log('❌ No user in auth state');
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
@@ -44,7 +74,22 @@ export default function PreviousInterviewsPage() {
       <div style={{ minHeight: '100vh', background: 'var(--color-bg-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ maxWidth: 800, margin: "40px auto", padding: 24, background: "var(--color-card-bg)", borderRadius: 12, boxShadow: "var(--color-card-shadow)", border: "1px solid var(--color-border)" }}>
           <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ color: 'var(--color-text)', fontSize: 18 }}>Loading your interview sessions...</div>
+            <div style={{ 
+              color: 'var(--color-text)', 
+              fontSize: 18, 
+              marginBottom: 16 
+            }}>
+              Loading your interview sessions...
+            </div>
+            <div style={{
+              width: 32,
+              height: 32,
+              border: '3px solid #e5e7eb',
+              borderTop: '3px solid #3b82f6',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto'
+            }}></div>
           </div>
         </div>
       </div>
@@ -54,7 +99,7 @@ export default function PreviousInterviewsPage() {
   if (selectedSession) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--color-bg-gradient)', padding: '2rem' }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, background: "var(--color-card-bg)", borderRadius: 12, boxShadow: "var(--color-card-shadow)", border: "1px solid var(--color-border)" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: 24, background: "var(--color-card-bg)", borderRadius: 12, boxShadow: "var(--color-card-shadow)", border: "1px solid var(--color-border)" }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>Interview Session</h1>
             <button 
@@ -65,58 +110,80 @@ export default function PreviousInterviewsPage() {
             </button>
           </div>
           
-          <div style={{ marginBottom: 16, color: 'var(--color-label)' }}>
-            <strong>Date:</strong> {new Date(selectedSession.date).toLocaleDateString()} | <strong>Program:</strong> {selectedSession.programType} | <strong>Questions:</strong> {selectedSession.completedQuestions}/{selectedSession.totalQuestions}
-          </div>
-
-          {selectedSession.answers.map((answer, idx) => (
-            <div key={idx} style={{ marginBottom: 32, borderBottom: '1px solid var(--color-border)', paddingBottom: 16 }}>
-              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 12, color: 'var(--color-text)' }}>
-                Q{idx + 1}: {answer.question}
-              </div>
-              
-              {answer.audioURL && (
-                <div style={{ marginBottom: 12 }}>
-                  <audio src={answer.audioURL} controls style={{ width: '100%' }} />
-                </div>
-              )}
-              
-              {answer.feedback && (
-                <div style={{ background: '#374151', borderRadius: 8, padding: 16, border: '1px solid #4b5563' }}>
-                  <h4 style={{ margin: '0 0 8px 0', fontSize: 16, color: '#f3f4f6', fontWeight: 600 }}>🤖 AI Feedback</h4>
-                  <p style={{ margin: '0 0 12px 0', color: '#d1d5db', lineHeight: '1.5' }}>{answer.feedback.text}</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-                    <div style={{ color: '#9ca3af' }}><strong style={{ color: '#f3f4f6' }}>Content:</strong> <span style={{ color: '#10b981' }}>{answer.feedback.contentScore}/10</span></div>
-                    <div style={{ color: '#9ca3af' }}><strong style={{ color: '#f3f4f6' }}>Delivery:</strong> <span style={{ color: '#10b981' }}>{answer.feedback.deliveryScore}/10</span></div>
-                    <div style={{ color: '#9ca3af' }}><strong style={{ color: '#f3f4f6' }}>Structure:</strong> <span style={{ color: '#10b981' }}>{answer.feedback.structureScore}/10</span></div>
-                    <div style={{ color: '#9ca3af' }}><strong style={{ color: '#f3f4f6' }}>Overall:</strong> <span style={{ color: '#10b981' }}>{answer.feedback.overallScore}/10</span></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+          <InterviewReport session={selectedSession} />
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg-gradient)', padding: '2rem' }}>
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, background: "var(--color-card-bg)", borderRadius: 12, boxShadow: "var(--color-card-shadow)", border: "1px solid var(--color-border)" }}>
+    <>
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
+      <div style={{ minHeight: '100vh', background: 'var(--color-bg-gradient)', padding: '2rem' }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, background: "var(--color-card-bg)", borderRadius: 12, boxShadow: "var(--color-card-shadow)", border: "1px solid var(--color-border)" }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>Previous Interviews</h1>
-          <Link href="/interview" style={{ background: 'var(--color-primary)', color: '#fff', padding: '0.5rem 1rem', borderRadius: 6, textDecoration: 'none', fontWeight: 600 }}>
-            Start New Interview
-          </Link>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Link href="/dashboard" style={{ 
+              background: '#6b7280', 
+              color: '#fff', 
+              padding: '0.5rem 1rem', 
+              borderRadius: 6, 
+              textDecoration: 'none', 
+              fontWeight: 600,
+              transition: 'background-color 0.2s'
+            }}>
+              ← Back to Dashboard
+            </Link>
+            <Link href="/interview" style={{ 
+              background: '#3b82f6', 
+              color: '#fff', 
+              padding: '0.5rem 1rem', 
+              borderRadius: 6, 
+              textDecoration: 'none', 
+              fontWeight: 600,
+              transition: 'background-color 0.2s'
+            }}>
+              Start New Interview
+            </Link>
+          </div>
         </div>
 
         {sessions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40 }}>
             <h3 style={{ color: 'var(--color-text)', marginBottom: 16 }}>No interview sessions yet</h3>
             <p style={{ color: 'var(--color-label)', marginBottom: 24 }}>Complete your first interview to see your responses and feedback here.</p>
-            <Link href="/interview" style={{ background: 'var(--color-primary)', color: '#fff', padding: '0.7rem 1.5rem', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>
-              Start Your First Interview
-            </Link>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <Link href="/dashboard" style={{ 
+                background: '#6b7280', 
+                color: '#fff', 
+                padding: '0.7rem 1.5rem', 
+                borderRadius: 8, 
+                textDecoration: 'none', 
+                fontWeight: 600,
+                transition: 'background-color 0.2s'
+              }}>
+                ← Back to Dashboard
+              </Link>
+              <Link href="/interview" style={{ 
+                background: '#3b82f6', 
+                color: '#fff', 
+                padding: '0.7rem 1.5rem', 
+                borderRadius: 8, 
+                textDecoration: 'none', 
+                fontWeight: 600,
+                transition: 'background-color 0.2s'
+              }}>
+                Start Your First Interview
+              </Link>
+            </div>
           </div>
         ) : (
           <div>
@@ -146,7 +213,8 @@ export default function PreviousInterviewsPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 } 

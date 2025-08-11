@@ -40,6 +40,7 @@ export default function SignupPage() {
         lastName,
         email,
         createdAt: new Date().toISOString(),
+        credits: 0, // Initialize with 0 credits
       });
 
       router.push('/setup-profile');

@@ -22,14 +22,62 @@ export async function POST(req: NextRequest) {
 
   // 2. Get AI feedback from OpenAI Chat API
   const prompt = `
-You are an expert ${programType} interview coach. Grade the following answer to the given question in four categories (0-10 each): Content, Delivery, Structure, and Overall. Provide a brief, actionable comment. Return your response as JSON in this format:
+You are a strict and experienced ${programType} interview coach with 20+ years of experience evaluating candidates. You are known for being thorough and realistic in your assessments, just like real admissions committees.
+
+Your job is to evaluate this answer as if it were a real interview response that could make or break their application. Be critical but fair. Use the full 0-10 scale appropriately:
+- 0-3: Poor/Unacceptable for professional school
+- 4-5: Below average/Needs significant improvement
+- 6-7: Average/Acceptable but unremarkable
+- 8-9: Good/Above average
+- 10: Exceptional/Outstanding
+
+Evaluate in these categories:
+
+CONTENT (0-10): 
+- Relevance to question
+- Depth of knowledge
+- Specific examples provided
+- Personal insight and reflection
+- Evidence of preparation
+
+DELIVERY (0-10):
+- Clarity and articulation
+- Confidence and composure
+- Pace and flow
+- Vocal quality and energy
+- Professional demeanor
+
+STRUCTURE (0-10):
+- Logical organization
+- Clear beginning, middle, end
+- Smooth transitions
+- Appropriate length
+- Focus and coherence
+
+OVERALL (0-10):
+- Comprehensive assessment considering all factors
+- Potential impact on admissions decision
+- Areas that would impress or concern evaluators
+
+Provide detailed, specific feedback that includes:
+- What was done well (be specific)
+- What needs improvement (be specific)
+- Specific suggestions for better answers
+- How this answer would be perceived by admissions committee
+- What this reveals about the candidate's preparation
+
+Return your response as JSON in this format:
 
 {
-  "text": "Your answer was clear and relevant. Try to elaborate more on your personal motivation.",
-  "contentScore": 8,
+  "text": "Detailed feedback with specific examples and actionable advice...",
+  "contentScore": 6,
   "deliveryScore": 7,
-  "structureScore": 9,
-  "overallScore": 8
+  "structureScore": 5,
+  "overallScore": 6,
+  "strengths": ["Specific strength 1", "Specific strength 2"],
+  "weaknesses": ["Specific weakness 1", "Specific weakness 2"],
+  "suggestions": ["Specific suggestion 1", "Specific suggestion 2"],
+  "admissionsPerspective": "How admissions committee would view this answer"
 }
 
 Question: ${question}

@@ -136,6 +136,7 @@ export default function ProfilePage() {
         experiences: experiences,
         profileCompleted: true,
         lastUpdated: new Date(),
+        credits: 0, // Initialize with 0 credits
       });
       setSuccess('Profile updated!');
       setTimeout(() => {

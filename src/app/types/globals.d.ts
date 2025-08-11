@@ -15,6 +15,8 @@ type User = {
   experiences?: Experience[];
   profileCompleted?: boolean;
   lastUpdated?: Date;
+  credits?: number;
+  lastCreditPurchase?: string;
 };
 
 type Question ={
@@ -29,6 +31,10 @@ type Feedback = {
   deliveryScore: number | null;
   structureScore: number | null;
   overallScore: number | null;
+  strengths?: string[];
+  weaknesses?: string[];
+  suggestions?: string[];
+  admissionsPerspective?: string;
 }
 
 type Answer = {
