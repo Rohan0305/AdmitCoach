@@ -13,8 +13,6 @@ export const ProgramOptions: ProgramOption[] = [
   { id: 7, value: 'Optometry School' },
   { id: 8, value: 'Law School' },
   { id: 9, value: 'Business School (MBA)' },
-  { id: 10, value: 'Graduate School (MS/PhD)' },
-  { id: 11, value: 'Physical Therapy (PT)' },
-  { id: 12, value: 'Occupational Therapy (OT)' },
-  { id: 13, value: 'Other' },
+  { id: 10, value: 'Physical Therapy (PT)' },
+  { id: 11, value: 'Occupational Therapy (OT)' },
 ]; 

@@ -1,6 +1,15 @@
 import medical_schoolquestions from '@/data/questions_medical_school.json';
 import dental_schoolquestions from '@/data/questions_dental_school.json';
 import pharmacy_schoolquestions from '@/data/questions_pharmacy_school.json';
+import pa_programquestions from '@/data/questions_pa_program.json';
+import nursing_schoolquestions from '@/data/questions_nursing_school.json';
+import veterinary_schoolquestions from '@/data/questions_veterinary_school.json';
+import optometry_schoolquestions from '@/data/questions_optometry_school.json';
+import law_schoolquestions from '@/data/questions_law_school.json';
+import business_schoolquestions from '@/data/questions_business_school.json';
+import graduate_schoolquestions from '@/data/questions_graduate_school.json';
+import physical_therapyquestions from '@/data/questions_physical_therapy.json';
+import occupational_therapyquestions from '@/data/questions_occupational_therapy.json';
 
 export function getQuestionsByProgram(programType: string): Question[] {
   switch (programType) {
@@ -11,32 +20,23 @@ export function getQuestionsByProgram(programType: string): Question[] {
     case 'Pharmacy School':
       return pharmacy_schoolquestions as Question[];
     case 'Physician Assistant (PA) Program':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return pa_programquestions as Question[];
     case 'Nursing School':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return nursing_schoolquestions as Question[];
     case 'Veterinary School':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return veterinary_schoolquestions as Question[];
     case 'Optometry School':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return optometry_schoolquestions as Question[];
     case 'Law School':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return law_schoolquestions as Question[];
     case 'Business School (MBA)':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return business_schoolquestions as Question[];
     case 'Graduate School (MS/PhD)':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return graduate_schoolquestions as Question[];
     case 'Physical Therapy (PT)':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return physical_therapyquestions as Question[];
     case 'Occupational Therapy (OT)':
-      // For now, use medical school questions as they're similar
-      return medical_schoolquestions as Question[];
+      return occupational_therapyquestions as Question[];
     case 'Other':
       // For now, use medical school questions as they're similar
       return medical_schoolquestions as Question[];
