@@ -39,6 +39,7 @@ type Feedback = {
 
 type Answer = {
   audioURL: string | null;
+  audioBlob?: Blob; // Store the actual audio data
   feedback: Feedback | null;
   question: string;
   questionId: number;

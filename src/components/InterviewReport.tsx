@@ -175,6 +175,40 @@ export default function InterviewReport({ session }: InterviewReportProps) {
               Question {index + 1}: {answer.question}
             </h3>
             
+            {/* Audio Player */}
+            {answer.audioURL && (
+              <div style={{
+                background: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                borderRadius: 8,
+                padding: '1rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem'
+                }}>
+                  <span style={{
+                    color: '#475569',
+                    fontSize: 14,
+                    fontWeight: 500
+                  }}>
+                    🎙️ Your Response:
+                  </span>
+                </div>
+                <audio 
+                  src={answer.audioURL} 
+                  controls 
+                  style={{ 
+                    width: '100%',
+                    height: '40px'
+                  }}
+                />
+              </div>
+            )}
+            
             {answer.feedback && (
               <div>
                 {/* Scores */}

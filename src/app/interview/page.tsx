@@ -86,17 +86,24 @@ export default function InterviewPage() {
     mediaRecorder.ondataavailable = (e) => chunksRef.current.push(e.data);
     mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(chunksRef.current, { type: "audio/mp4" });
-      const url = URL.createObjectURL(audioBlob);
-      setAudioURL(url);
-      setHasRecorded(true);
+      
+      // Convert blob to data URL for persistent storage
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataURL = reader.result as string;
+        setAudioURL(dataURL);
+        setHasRecorded(true);
 
-      const newAnswer: Answer = {
-        audioURL: url,
-        feedback: null,
-        question: curated[current].question,
-        questionId: curated[current].id,
+        const newAnswer: Answer = {
+          audioURL: dataURL, // This will persist across page refreshes
+          audioBlob: audioBlob,
+          feedback: null,
+          question: curated[current].question,
+          questionId: curated[current].id,
+        };
+        setAnswers((prev) => [...prev, newAnswer]);
       };
-      setAnswers((prev) => [...prev, newAnswer]);
+      reader.readAsDataURL(audioBlob);
     };
     mediaRecorder.start();
     setRecording(true);

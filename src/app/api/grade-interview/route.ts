@@ -6,10 +6,36 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const audio = formData.get("audio") as File;
-  const question = formData.get("question") as string;
-  const programType = formData.get("programType") as string || "Medical School";
+  try {
+    // Verify user authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.split(' ')[1];
+    // Verify Firebase token (you'll need to implement this)
+    // const user = await verifyFirebaseToken(token);
+    // if (!user) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+
+    const formData = await req.formData();
+    const audio = formData.get("audio") as File;
+    const question = formData.get("question") as string;
+    const programType = formData.get("programType") as string || "Medical School";
+
+    // Validate inputs
+    if (!audio || !question) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Validate file type and size
+    if (!audio.type.startsWith('audio/')) {
+      return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
+    }
+
+    if (audio.size > 10 * 1024 * 1024) { // 10MB limit
+      return NextResponse.json({ error: 'File too large' }, { status: 400 });
+    }
 
   // 1. Transcribe audio with OpenAI Whisper
   const transcriptResp = await openai.audio.transcriptions.create({
@@ -120,4 +146,11 @@ Transcript: ${transcript}
   }
 
   return NextResponse.json(feedback);
+  } catch (error) {
+    console.error('Error in grade-interview API:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }

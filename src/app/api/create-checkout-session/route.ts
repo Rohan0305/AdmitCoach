@@ -4,6 +4,15 @@ import { CREDIT_PACKAGES } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify user authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // TODO: Verify Firebase token here
+    // const user = await verifyFirebaseToken(token);
+
     if (!stripe) {
       return NextResponse.json(
         { error: 'Stripe is not configured' },
@@ -12,6 +21,23 @@ export async function POST(req: NextRequest) {
     }
 
     const { packageId, userId, userEmail } = await req.json();
+
+    // Validate inputs
+    if (!packageId || !userId || !userEmail) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Validate packageId
+    const validPackages = ['credits_5', 'credits_10', 'credits_20'];
+    if (!validPackages.includes(packageId)) {
+      return NextResponse.json(
+        { error: 'Invalid package selected' },
+        { status: 400 }
+      );
+    }
 
     // Find the selected package
     const selectedPackage = CREDIT_PACKAGES.find(pkg => pkg.id === packageId);
