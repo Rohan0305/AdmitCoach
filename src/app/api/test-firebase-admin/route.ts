@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { app } from '@/firebase';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     console.log('Testing Firebase permissions...');
     console.log('Environment check:', {
@@ -53,14 +53,15 @@ export async function GET(req: NextRequest) {
     console.error('Error constructor:', error?.constructor?.name);
     
     if (error instanceof Error && 'code' in error) {
-      console.error('Firebase error code:', (error as any).code);
-      console.error('Firebase error details:', (error as any).customData);
+      const firebaseError = error as Error & { code: string; customData?: unknown };
+      console.error('Firebase error code:', firebaseError.code);
+      console.error('Firebase error details:', firebaseError.customData);
     }
     
     return NextResponse.json({ 
       error: 'Firebase test failed',
       details: error instanceof Error ? error.message : String(error),
-      code: error instanceof Error && 'code' in error ? (error as any).code : 'unknown',
+      code: error instanceof Error && 'code' in error ? (error as { code: string }).code : 'unknown',
       errorType: error?.constructor?.name
     }, { status: 500 });
   }

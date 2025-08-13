@@ -107,8 +107,9 @@ export async function POST(req: NextRequest) {
           
           // Try to get more details about the error
           if (error instanceof Error && 'code' in error) {
-            console.error('Firebase error code:', (error as any).code);
-            console.error('Firebase error details:', (error as any).customData);
+            const firebaseError = error as Error & { code: string; customData?: unknown };
+            console.error('Firebase error code:', firebaseError.code);
+            console.error('Firebase error details:', firebaseError.customData);
           }
         }
       } else {
