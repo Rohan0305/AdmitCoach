@@ -6,6 +6,7 @@ import { getAuth } from "firebase/auth";
 import { getInterviewSessions } from '@/utils/interviewStorage';
 import { app } from '@/firebase';
 import InterviewReport from '@/components/InterviewReport';
+import { User } from 'firebase/auth';
 
 
 export default function PreviousInterviewsPage() {
@@ -56,7 +57,7 @@ export default function PreviousInterviewsPage() {
     
     // Wait for auth state to be ready
     const auth = getAuth(app);
-    const unsubscribe = auth.onAuthStateChanged((user: any) => {
+    const unsubscribe = auth.onAuthStateChanged((user: User | null) => {
       console.log('🔐 Auth state changed:', user);
       if (user) {
         loadSessions();

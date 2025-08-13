@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { saveInterviewSession, generateSessionId } from '@/utils/interviewStorage';
 import { getQuestionsByProgram } from '@/utils/questionLoader';
-import { app } from '@/firebase';
+import { Question, Answer } from '@/app/types/types';
 import useAuthUser from '../zustand/useAuthUser';
-import Link from "next/link";
+import { app } from '@/firebase';
 
 function getRandomQuestions(arr: Question[], n: number): Question[] {
   const shuffled = arr.slice().sort(() => 0.5 - Math.random());
@@ -16,18 +17,17 @@ function getRandomQuestions(arr: Question[], n: number): Question[] {
 
 export default function InterviewPage() {
   const { user } = useAuthUser();
-  const [curated, setCurated] = useState<Question[]>([]);
-  const [current, setCurrent] = useState(0);
-  const [recording, setRecording] = useState(false);
-  const [audioURL, setAudioURL] = useState<string | null>(null);
-  const [hasRecorded, setHasRecorded] = useState(false);
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [sessionDone, setSessionDone] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
-  const [processingFeedback, setProcessingFeedback] = useState(false);
   const [insufficientCredits, setInsufficientCredits] = useState(false);
-  const [creditDeducted, setCreditDeducted] = useState(false);
+  const [processingFeedback, setProcessingFeedback] = useState(false);
+  const [sessionDone, setSessionDone] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [hasRecorded, setHasRecorded] = useState(false);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [curated, setCurated] = useState<Question[]>([]);
+  const [sessionId] = useState(() => generateSessionId());
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -65,7 +65,6 @@ export default function InterviewPage() {
       
       const questions = getQuestionsByProgram(user.programType);
       setCurated(getRandomQuestions(questions, 2));
-      setSessionId(generateSessionId());
     }
     
     // Cleanup function to clear timer when component unmounts
@@ -291,7 +290,7 @@ export default function InterviewPage() {
       console.log('Audio URL:', audioURL);
       
       // Build the complete answers array locally
-      let allAnswers = [...answers];
+      const allAnswers = [...answers];
       console.log('Initial allAnswers array:', allAnswers);
       
       // Add the current answer if it exists

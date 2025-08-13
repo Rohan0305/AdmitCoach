@@ -10,6 +10,7 @@ import business_schoolquestions from '@/data/questions_business_school.json';
 import graduate_schoolquestions from '@/data/questions_graduate_school.json';
 import physical_therapyquestions from '@/data/questions_physical_therapy.json';
 import occupational_therapyquestions from '@/data/questions_occupational_therapy.json';
+import { Question } from '@/app/types/types';
 
 export function getQuestionsByProgram(programType: string): Question[] {
   switch (programType) {
