@@ -178,7 +178,7 @@ export default function ProfilePage() {
         </h1>
         <h2 style={{ textAlign: 'center', color: 'var(--color-text)', fontWeight: 700, fontSize: 24, margin: 0 }}>Set Up Your Profile</h2>
         <p style={{ color: 'var(--color-label)', fontSize: 16, marginTop: 4, textAlign: 'center' }}>
-          Select the type of program you are preparing for:
+          Select the type of program you are preparing for. Experiences are optional and can be added later.
         </p>
         <div style={{ position: 'relative' }}>
           <input
@@ -313,7 +313,12 @@ export default function ProfilePage() {
 
         {/* Experiences Section */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <label style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Experiences</label>
+          <div style={{ marginBottom: '0.5rem' }}>
+            <label style={{ color: 'var(--color-label)', fontWeight: 500, fontSize: 15 }}>Experiences (Optional)</label>
+            <p style={{ color: 'var(--color-label)', fontSize: 13, margin: '0.25rem 0 0 0' }}>
+              Add any relevant experiences, internships, or activities. This is completely optional and can be skipped.
+            </p>
+          </div>
             {experiences.map((exp, idx) => (
             <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8 }}>
                 <input

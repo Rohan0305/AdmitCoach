@@ -70,37 +70,9 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {!user?.profileCompleted && (
-          <div style={{
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            borderRadius: 8,
-            padding: '1rem',
-            marginBottom: '2rem',
-          }}>
-            <h3 style={{ color: '#92400e', margin: '0 0 0.5rem 0', fontSize: 16 }}>
-              Complete Your Profile
-            </h3>
-            <p style={{ color: '#92400e', margin: 0, fontSize: 14 }}>
-              Set up your profile to get personalized interview practice.
-            </p>
-            <Link href="/setup-profile" style={{
-              display: 'inline-block',
-              background: '#f59e0b',
-              color: '#fff',
-              padding: '0.5rem 1rem',
-              borderRadius: 6,
-              textDecoration: 'none',
-              fontSize: 14,
-              fontWeight: 600,
-              marginTop: '0.5rem',
-            }}>
-              Complete Profile
-            </Link>
-          </div>
-        )}
 
-        {user?.profileCompleted && (
+
+        {(user?.programType || user?.undergraduateSchool) && (
           <div style={{
             background: 'var(--color-card-bg)',
             borderRadius: 12,
@@ -144,44 +116,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {user?.experiences && user.experiences.length > 0 && (
-          <div style={{
-            background: 'var(--color-card-bg)',
-            borderRadius: 12,
-            padding: '2rem',
-            marginBottom: '2rem',
-            boxShadow: 'var(--color-card-shadow)',
-            border: '1px solid var(--color-border)',
-          }}>
-            <h2 style={{ color: 'var(--color-text)', fontSize: 24, fontWeight: 600, margin: '0 0 1.5rem 0' }}>
-              Your Experiences
-            </h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {user.experiences.map((exp, idx) => (
-                <div key={idx} style={{
-                  background: '#f8fafc',
-                  borderRadius: 8,
-                  padding: '1rem',
-                  border: '1px solid var(--color-border)',
-                }}>
-                  <div style={{ fontWeight: 600, color: 'var(--color-text)', fontSize: 16 }}>
-                    {exp.role || 'Role not specified'}
-                  </div>
-                  <div style={{ color: 'var(--color-label)', fontSize: 14, marginTop: 2 }}>
-                    {exp.organization || 'Organization not specified'}
-                  </div>
-                  <div style={{ color: 'var(--color-label)', fontSize: 13, marginTop: 2 }}>
-                    {exp.startDate} - {exp.endDate || 'Present'}
-                  </div>
-                  <div style={{ color: 'var(--color-label)', fontSize: 15, marginTop: 4 }}>
-                    {exp.description || 'No description provided'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Credits Display */}
         <div style={{

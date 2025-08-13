@@ -1,67 +1,78 @@
 # Stripe Integration Setup
 
-This document explains how to set up Stripe for the AdmitCoach interview credit system.
+## Prerequisites
+- Stripe account
+- Firebase project with Firestore enabled
+- Next.js application
 
-## Required Environment Variables
-
+## Environment Variables
 Add these to your `.env.local` file:
 
 ```bash
-# Stripe Configuration
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
-STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+# Firebase (if not already added)
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
 ```
 
-## Stripe Dashboard Setup
+## Firebase Storage Setup
+Since we're now storing audio files in Firebase Storage instead of embedding them in Firestore (to avoid the 1MB document limit), you need to:
 
-1. **Create a Stripe Account**: Sign up at [stripe.com](https://stripe.com)
+1. **Enable Firebase Storage** in your Firebase Console
+2. **Set Storage Rules** to allow authenticated users to upload/read audio files:
 
-2. **Get API Keys**: 
-   - Go to Developers → API Keys in your Stripe dashboard
-   - Copy your publishable key and secret key
-   - Use test keys for development
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /interview-audio/{audioFile} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
 
-3. **Set Up Webhooks**:
-   - Go to Developers → Webhooks in your Stripe dashboard
-   - Click "Add endpoint"
-   - Set the endpoint URL to: `https://yourdomain.com/api/webhooks/stripe`
-   - Select the `checkout.session.completed` event
-   - Copy the webhook signing secret
+3. **Set CORS Rules** to allow uploads from your domain. In Firebase Console:
+   - Go to Storage → Rules
+   - Click on "CORS" tab
+   - Add this CORS configuration:
 
-## Credit Packages
+```json
+[
+  {
+    "origin": ["*"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "User-Agent", "x-goog-*"]
+  }
+]
+```
 
-The system includes three credit packages:
-- **5 Credits**: $19.99
-- **10 Credits**: $34.99 (Most Popular)
-- **20 Credits**: $59.99
+4. **Ensure your Firebase config includes the storage bucket** (it should be auto-generated)
 
-## How It Works
+## Troubleshooting CORS Issues
+If you get "Preflight response is not successful. Status code: 404" errors:
 
-1. **Credit Purchase**: Users select a credit package and are redirected to Stripe Checkout
-2. **Payment Processing**: Stripe handles the payment securely
-3. **Credit Addition**: Upon successful payment, credits are automatically added to the user's account via webhook
-4. **Credit Usage**: Each mock interview session costs 1 credit
-5. **Credit Deduction**: Credits are deducted when the interview is completed
-
-## Security Features
-
-- Webhook signature verification prevents unauthorized requests
-- Credits are only added after confirmed payment
-- Server-side credit validation prevents interview access without credits
-- Automatic credit deduction after interview completion
+1. **Check CORS Rules**: Make sure the CORS configuration above is set in Firebase Storage
+2. **Verify Storage Bucket**: Ensure `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` is correct
+3. **Wait for Propagation**: CORS changes can take a few minutes to take effect
+4. **Check Domain**: Make sure your domain is allowed in the CORS rules
 
 ## Testing
+1. Start a mock interview
+2. Record responses
+3. Complete the interview
+4. Check that audio files are uploaded to Firebase Storage
+5. Verify the interview session is saved to Firestore (should be under 1MB now)
 
-Use Stripe's test card numbers for testing:
-- **Success**: 4242 4242 4242 4242
-- **Decline**: 4000 0000 0000 0002
-- **Requires Authentication**: 4000 0025 0000 3155
-
-## Production Considerations
-
-- Switch to live API keys for production
-- Set up proper webhook endpoints for your production domain
-- Monitor webhook delivery and retry failed webhooks
-- Consider implementing webhook retry logic
-- Set up proper error monitoring and alerting 
+## Troubleshooting
+- If you get "storage bucket not found" errors, check that `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` is set correctly
+- If audio uploads fail, the system will fall back to saving the session without audio
+- Check the browser console for detailed logging of the upload process 

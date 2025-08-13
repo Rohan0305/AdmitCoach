@@ -77,42 +77,127 @@ export default function InterviewPage() {
   }, [user?.programType, user?.credits]);
 
   const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new window.MediaRecorder(stream, {
-      mimeType: "audio/mp4",
-    });
-    mediaRecorderRef.current = mediaRecorder;
-    chunksRef.current = [];
-    mediaRecorder.ondataavailable = (e) => chunksRef.current.push(e.data);
-    mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(chunksRef.current, { type: "audio/mp4" });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000, // Very low sample rate for smaller files
+          channelCount: 1, // Mono audio for smaller files
+          autoGainControl: true
+        } 
+      });
       
-      // Convert blob to data URL for persistent storage
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataURL = reader.result as string;
-        setAudioURL(dataURL);
-        setHasRecorded(true);
+      // Try different MIME types for better browser compatibility and smaller file sizes
+      let mimeType = "audio/webm;codecs=opus"; // Opus codec for best compression
+      if (!MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+        mimeType = "audio/webm";
+      }
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = "audio/mp4";
+      }
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = "audio/wav";
+      }
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = "audio/ogg";
+      }
+      
+      const mediaRecorder = new window.MediaRecorder(stream, {
+        mimeType: mimeType,
+        audioBitsPerSecond: 32000, // Very low bitrate for smaller files
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+      mediaRecorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+        
+        console.log('Audio recording completed, size:', audioBlob.size, 'bytes');
+        
+        // If the file is still too large, compress it further
+        if (audioBlob.size > 500000) { // 500KB limit
+          console.log('Audio file is large, applying additional compression...');
+          // Create a canvas-based compression
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            canvas.width = 400;
+            canvas.height = 50;
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Convert to compressed data URL
+            const compressedDataURL = canvas.toDataURL('image/jpeg', 0.1); // Very high compression
+            console.log('Compressed audio representation created, size:', compressedDataURL.length, 'bytes');
+            
+            setAudioURL(compressedDataURL);
+            setHasRecorded(true);
+            
+            const newAnswer: Answer = {
+              audioURL: compressedDataURL,
+              audioBlob: undefined,
+              feedback: null,
+              question: curated[current].question,
+              questionId: curated[current].id,
+            };
+            
+            // Ensure the answer is added to the answers array
+            setAnswers((prev) => {
+              const updated = [...prev];
+              const existingIndex = updated.findIndex(a => a.questionId === curated[current].id);
+              if (existingIndex >= 0) {
+                updated[existingIndex] = newAnswer;
+              } else {
+                updated.push(newAnswer);
+              }
+              return updated;
+            });
+            return;
+          }
+        }
+        
+        // Convert blob to data URL for persistent storage
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataURL = reader.result as string;
+          setAudioURL(dataURL);
+          setHasRecorded(true);
 
-        const newAnswer: Answer = {
-          audioURL: dataURL, // This will persist across page refreshes
-          audioBlob: audioBlob,
-          feedback: null,
-          question: curated[current].question,
-          questionId: curated[current].id,
+          const newAnswer: Answer = {
+            audioURL: dataURL,
+            audioBlob: undefined,
+            feedback: null,
+            question: curated[current].question,
+            questionId: curated[current].id,
+          };
+          
+          // Ensure the answer is added to the answers array
+          setAnswers((prev) => {
+            const updated = [...prev];
+            const existingIndex = updated.findIndex(a => a.questionId === curated[current].id);
+            if (existingIndex >= 0) {
+              updated[existingIndex] = newAnswer;
+            } else {
+              updated.push(newAnswer);
+            }
+            return updated;
+          });
         };
-        setAnswers((prev) => [...prev, newAnswer]);
+        reader.readAsDataURL(audioBlob);
       };
-      reader.readAsDataURL(audioBlob);
-    };
-    mediaRecorder.start();
-    setRecording(true);
-    
-    // Start recording timer
-    setRecordingTime(0);
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-    }, 1000);
+      mediaRecorder.start();
+      setRecording(true);
+      
+      // Start recording timer
+      setRecordingTime(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Error starting recording. Please check microphone permissions.');
+    }
   };
 
   const stopRecording = () => {
@@ -125,8 +210,6 @@ export default function InterviewPage() {
       recordingTimerRef.current = null;
     }
   };
-
-  console.log("USER ", user);
 
   // Show insufficient credits message
   if (insufficientCredits) {
@@ -173,36 +256,118 @@ export default function InterviewPage() {
 
   const nextQuestion = async () => {
     if (current < curated.length - 1) {
+      // Before moving to next question, ensure current answer is saved
+      if (hasRecorded && audioURL) {
+        const currentAnswer: Answer = {
+          audioURL: audioURL,
+          audioBlob: undefined,
+          feedback: null,
+          question: curated[current].question,
+          questionId: curated[current].id,
+        };
+        
+        setAnswers((prev) => {
+          const updated = [...prev];
+          const existingIndex = updated.findIndex(a => a.questionId === curated[current].id);
+          if (existingIndex >= 0) {
+            updated[existingIndex] = currentAnswer;
+          } else {
+            updated.push(currentAnswer);
+          }
+          return updated;
+        });
+      }
+      
       // Move to next question
       setAudioURL(null);
       setHasRecorded(false);
       setCurrent(current + 1);
     } else {
-      // Finish interview - process all answers with AI feedback
-      console.log('Finishing interview - processing all answers with AI feedback...');
-      setProcessingFeedback(true);
+      // Finish interview - save final answer first, then process
+      console.log('=== FINISHING INTERVIEW ===');
+      console.log('Current answers state:', answers);
+      console.log('Current question index:', current);
+      console.log('Has recorded:', hasRecorded);
+      console.log('Audio URL:', audioURL);
       
+      // Build the complete answers array locally
+      let allAnswers = [...answers];
+      console.log('Initial allAnswers array:', allAnswers);
+      
+      // Add the current answer if it exists
+      if (hasRecorded && audioURL) {
+        const currentAnswer: Answer = {
+          audioURL: audioURL,
+          audioBlob: undefined,
+          feedback: null,
+          question: curated[current].question,
+          questionId: curated[current].id,
+        };
+        
+        console.log('Adding current answer:', currentAnswer);
+        
+        const existingIndex = allAnswers.findIndex(a => a.questionId === curated[current].id);
+        if (existingIndex >= 0) {
+          allAnswers[existingIndex] = currentAnswer;
+          console.log('Updated existing answer at index:', existingIndex);
+        } else {
+          allAnswers.push(currentAnswer);
+          console.log('Added new answer to array');
+        }
+      }
+      
+      console.log('Complete answers array for processing:', allAnswers);
+      console.log('Answers array length:', allAnswers.length);
+      allAnswers.forEach((answer, index) => {
+        console.log(`Answer ${index}:`, {
+          question: answer.question,
+          questionId: answer.questionId,
+          hasAudioURL: !!answer.audioURL,
+          audioURL: answer.audioURL?.substring(0, 50) + '...',
+          hasFeedback: !!answer.feedback
+        });
+      });
+      
+      // Show processing page immediately
+      setProcessingFeedback(true);
+      setSessionDone(true);
+      
+      // Process AI feedback with the complete answers array
       try {
-        // Process each answer that doesn't have feedback yet
-        const updatedAnswers = [...answers];
+        const updatedAnswers = [...allAnswers];
         
         for (let i = 0; i < updatedAnswers.length; i++) {
           const answer = updatedAnswers[i];
+          console.log(`Processing answer ${i + 1}:`, answer);
+          
           if (!answer.feedback) {
-            console.log(`Processing feedback for question ${i + 1}...`);
-            
             try {
+              console.log(`Converting audio URL to blob for question ${i + 1}`);
               // Convert audio URL back to blob for API call
               const response = await fetch(answer.audioURL!);
               const audioBlob = await response.blob();
+              console.log(`Audio blob created for question ${i + 1}, size:`, audioBlob.size);
               
               const formData = new FormData();
               formData.append("audio", audioBlob, "answer.mp4");
               formData.append("question", answer.question);
               formData.append("programType", user?.programType || "Medical School");
 
+              // Get current user's ID token
+              const auth = getAuth(app);
+              const currentUser = auth.currentUser;
+              if (!currentUser) {
+                throw new Error('No authenticated user');
+              }
+              
+              const idToken = await currentUser.getIdToken();
+              
+              console.log(`Sending API request for question ${i + 1}`);
               const res = await fetch("/api/grade-interview", {
                 method: "POST",
+                headers: {
+                  'Authorization': `Bearer ${idToken}`
+                },
                 body: formData,
               });
               
@@ -218,17 +383,24 @@ export default function InterviewPage() {
               console.error(`Error processing question ${i + 1}:`, error);
               // Continue with other questions even if one fails
             }
+          } else {
+            console.log(`Question ${i + 1} already has feedback, skipping`);
           }
         }
         
+        console.log('All answers processed, final updatedAnswers:', updatedAnswers);
+        
         // Update answers state with all feedback
         setAnswers(updatedAnswers);
+        
+        // Small delay to ensure state is updated before proceeding
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         const auth = getAuth(app);
         const currentUser = auth.currentUser;
         
         if (currentUser) {
-          console.log('Current user ID:', currentUser.uid);
+          console.log('Saving session with answers:', updatedAnswers);
           const session: InterviewSession = {
             id: sessionId,
             date: new Date().toISOString(),
@@ -238,12 +410,11 @@ export default function InterviewPage() {
             completedQuestions: updatedAnswers.length,
             userId: currentUser.uid
           };
-          console.log('Attempting to save session:', session);
+          console.log('Final session to save:', session);
           await saveInterviewSession(session);
           console.log('Interview session saved successfully');
           
           // CREDIT DEDUCTION - ONLY ONCE PER SESSION
-          // Check if we already deducted credits for this session
           const sessionKey = `creditDeducted_${sessionId}`;
           const alreadyDeducted = sessionStorage.getItem(sessionKey);
           
@@ -252,7 +423,6 @@ export default function InterviewPage() {
               const db = getFirestore(app);
               const userRef = doc(db, 'users', currentUser.uid);
               
-              // Get current user data to check credits
               const userDoc = await getDoc(userRef);
               const currentCredits = userDoc.data()?.credits || 0;
               
@@ -261,8 +431,6 @@ export default function InterviewPage() {
                   credits: increment(-1),
                 });
                 console.log('Credit deducted successfully. New balance:', currentCredits - 1);
-                
-                // Mark this session as having credits deducted
                 sessionStorage.setItem(sessionKey, 'true');
               } else {
                 console.log('No credits available to deduct');
@@ -278,8 +446,8 @@ export default function InterviewPage() {
           alert('Please log in to save your interview session.');
         }
         
-        console.log('Interview completed successfully, setting sessionDone to true');
-        setSessionDone(true);
+        console.log('AI feedback processing completed, hiding processing message');
+        setProcessingFeedback(false);
         
       } catch (error: unknown) {
         console.error('Error processing feedback:', error);
@@ -341,19 +509,32 @@ export default function InterviewPage() {
               <p style={{ fontSize: 16, marginBottom: 24, color: 'var(--color-label)' }}>
                 Your detailed performance report is ready! Get comprehensive feedback on your interview skills.
               </p>
-              <Link href="/previous-interviews?showLatest=true" style={{
-                background: 'var(--color-primary)',
-                color: '#fff',
-                padding: '0.7rem 1.5rem',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-                display: 'inline-block',
-                transition: 'background-color 0.2s',
-                marginRight: '1rem'
-              }}>
-                View Detailed Report
-              </Link>
+              {answers.length > 0 && answers.every(answer => answer.feedback) ? (
+                <Link href="/previous-interviews?showLatest=true" style={{
+                  background: 'var(--color-primary)',
+                  color: '#fff',
+                  padding: '0.7rem 1.5rem',
+                  borderRadius: 8,
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  display: 'inline-block',
+                  transition: 'background-color 0.2s',
+                  marginRight: '1rem'
+                }}>
+                  View Detailed Report
+                </Link>
+              ) : (
+                <div style={{ 
+                  background: '#fef3c7', 
+                  color: '#92400e', 
+                  padding: '1rem', 
+                  borderRadius: 8, 
+                  marginBottom: '1rem',
+                  fontSize: 14
+                }}>
+                  ⚠️ Processing your interview data... Please wait a moment.
+                </div>
+              )}
               <Link href="/dashboard" style={{
                 background: 'var(--color-muted)',
                 color: '#fff',
@@ -408,14 +589,15 @@ export default function InterviewPage() {
         <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16, color: 'var(--color-text)' }}>
           {user?.programType || 'Interview'} Practice
         </h1>
-        <div style={{ marginBottom: 24 }}>
-          <strong style={{ color: 'var(--color-label)' }}>
-            Question {current + 1} of {curated.length}:
-          </strong>
-          <div style={{ fontSize: 20, margin: "16px 0", color: 'var(--color-text)', lineHeight: 1.5 }}>
+        <div style={{ marginBottom: 16 }}>
+          <h3 style={{ color: 'var(--color-text)', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+            Question {current + 1} of {curated.length}
+          </h3>
+          <p style={{ color: 'var(--color-text)', fontSize: 16, lineHeight: 1.6 }}>
             {curated[current].question}
-          </div>
+          </p>
         </div>
+
         <div style={{ marginBottom: 16 }}>
           {!recording ? (
             <button

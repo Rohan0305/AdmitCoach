@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { CREDIT_PACKAGES } from '@/lib/stripe';
+import { verifyFirebaseToken } from '@/lib/firebase-admin';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,18 +10,24 @@ export async function POST(req: NextRequest) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // TODO: Verify Firebase token here
-    // const user = await verifyFirebaseToken(token);
+    const token = authHeader.split(' ')[1];
+    
+    const user = await verifyFirebaseToken(token); // Verify Firebase token
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+    console.log('User authenticated for checkout:', user.uid);
 
     if (!stripe) {
-      return NextResponse.json(
-        { error: 'Stripe is not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 });
     }
 
     const { packageId, userId, userEmail } = await req.json();
+
+    // Verify the userId in the request matches the authenticated user
+    if (userId !== user.uid) {
+      return NextResponse.json({ error: 'User ID mismatch' }, { status: 403 });
+    }
 
     // Validate inputs
     if (!packageId || !userId || !userEmail) {
