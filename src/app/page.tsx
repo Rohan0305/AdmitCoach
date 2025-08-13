@@ -65,7 +65,7 @@ export default function Home() {
         >
           <span style={{ color: '#fff', fontWeight: 700, fontSize: 36, letterSpacing: 1 }}>AC</span>
         </div>
-        <h1 style={{ color: 'var(--color-text)', fontWeight: 800, fontSize: 40, margin: 0 }}>AdmitCoach</h1>
+        <h1 style={{ color: 'var(--color-text)', fontWeight: 800, fontSize: 40, margin: 0 }}>AdmitCoach!!!!</h1>
         <p style={{ color: 'var(--color-label)', fontSize: 20, margin: '18px 0 32px 0', maxWidth: 480 }}>
           Practice your medical or dental school interviews with realistic mock questions and get instant AI-powered feedback. Boost your confidence and ace your interview!
         </p>
