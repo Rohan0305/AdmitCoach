@@ -1,13 +1,41 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import { getAuth, signOut } from 'firebase/auth';
-import { app } from '../../firebase';
+import { getFirestore, getDoc, doc } from 'firebase/firestore';
+import { app } from "@/firebase";
 import Link from 'next/link';
 import useAuthUser from '../zustand/useAuthUser';
+import { User } from '@/app/types/types';
 
 export default function DashboardPage() {
-  const { user } = useAuthUser();
+  const { user, setUser } = useAuthUser();
+  const [loading, setLoading] = useState(true);
+
+  // Refresh user data when dashboard loads to ensure credit count is up-to-date
+  useEffect(() => {
+    const refreshUserData = async () => {
+      if (user) {
+        try {
+          const auth = getAuth(app);
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            const db = getFirestore(app);
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (userDoc.exists()) {
+              const freshUserData = userDoc.data() as User;
+              setUser(freshUserData);
+            }
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      }
+      setLoading(false);
+    };
+
+    refreshUserData();
+  }, [user, setUser]);
 
   const handleLogout = async () => {
     const auth = getAuth(app);
@@ -17,16 +45,31 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--color-bg-gradient)',
-      }}>
-        <div style={{ color: 'var(--color-text)', fontSize: 18, marginBottom: 16 }}>
-          Loading...
+      <div style={{ minHeight: '100vh', background: 'var(--color-bg-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ maxWidth: 800, margin: "40px auto", padding: 24, background: "var(--color-card-bg)", borderRadius: 12, boxShadow: "var(--color-card-shadow)", border: "1px solid var(--color-border)" }}>
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <div style={{ 
+              color: 'var(--color-text)', 
+              fontSize: 18, 
+              marginBottom: 16 
+            }}>
+              {loading ? 'Loading your dashboard...' : 'Please log in to access your dashboard.'}
+            </div>
+            {!loading && (
+              <Link href="/login" style={{
+                background: 'var(--color-primary)',
+                color: '#fff',
+                padding: '0.7rem 1.5rem',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: 16,
+                display: 'inline-block'
+              }}>
+                Go to Login
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     );

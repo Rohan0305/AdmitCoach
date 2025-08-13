@@ -16,7 +16,7 @@ function getRandomQuestions(arr: Question[], n: number): Question[] {
 }
 
 export default function InterviewPage() {
-  const { user } = useAuthUser();
+  const { user, setUser } = useAuthUser();
   const [insufficientCredits, setInsufficientCredits] = useState(false);
   const [processingFeedback, setProcessingFeedback] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
@@ -431,6 +431,11 @@ export default function InterviewPage() {
                 });
                 console.log('Credit deducted successfully. New balance:', currentCredits - 1);
                 sessionStorage.setItem(sessionKey, 'true');
+                
+                // Update Zustand store to reflect new credit count immediately
+                if (user) {
+                  setUser({ ...user, credits: currentCredits - 1 });
+                }
               } else {
                 console.log('No credits available to deduct');
               }
