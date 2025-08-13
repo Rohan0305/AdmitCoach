@@ -19,11 +19,15 @@ export default function CreditsPage() {
     setLoading(packageId);
     
     try {
+      // Get current user's ID token
+      const idToken = await currentUser.getIdToken();
+      
       // Create checkout session
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
         },
         body: JSON.stringify({
           packageId,
@@ -32,15 +36,30 @@ export default function CreditsPage() {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Checkout session creation failed:', errorData);
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
       const { sessionId } = await response.json();
+      
+      console.log('Checkout session created successfully:', { sessionId });
+      
+      if (!sessionId) {
+        throw new Error('No session ID received from server');
+      }
       
       // Redirect to Stripe checkout
       const stripe = await getStripe();
       if (stripe) {
+        console.log('Stripe instance loaded, redirecting to checkout with sessionId:', sessionId);
         const { error } = await stripe.redirectToCheckout({ sessionId });
         if (error) {
           console.error('Stripe error:', error);
         }
+      } else {
+        console.error('Failed to load Stripe instance');
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);

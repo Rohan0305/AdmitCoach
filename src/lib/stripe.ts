@@ -3,14 +3,32 @@ import { loadStripe } from '@stripe/stripe-js';
 
 // Server-side Stripe instance
 export const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2025-07-30.basil',
-    })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 // Client-side Stripe instance
-export const getStripe = () => {
-  return loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+export const getStripe = async () => {
+  try {
+    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (!publishableKey) {
+      console.error('Stripe publishable key is missing');
+      return null;
+    }
+    
+    console.log('Loading Stripe with key:', publishableKey.substring(0, 20) + '...');
+    const stripe = await loadStripe(publishableKey);
+    
+    if (!stripe) {
+      console.error('Failed to load Stripe instance');
+      return null;
+    }
+    
+    console.log('Stripe loaded successfully');
+    return stripe;
+  } catch (error) {
+    console.error('Error loading Stripe:', error);
+    return null;
+  }
 };
 
 // Credit package configurations
