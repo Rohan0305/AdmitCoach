@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { InterviewSession } from '@/app/types/types';
 
 interface InterviewReportProps {
   session: InterviewSession;
