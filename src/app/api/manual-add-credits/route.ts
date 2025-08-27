@@ -5,7 +5,7 @@ import { verifyFirebaseToken } from '@/lib/firebase-admin';
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify user authentication
+    //verify user authentication
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const db = getFirestore(app);
     const userRef = doc(db, 'users', user.uid);
     
-    // Get current credits first
+    //get current credits first
     const userDoc = await getDoc(userRef);
     const currentCredits = userDoc.data()?.credits || 0;
     
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       lastCreditPurchase: new Date().toISOString(),
     });
     
-    // Get updated credits
+    //get updated credits
     const updatedUserDoc = await getDoc(userRef);
     const newCredits = updatedUserDoc.data()?.credits || 0;
     

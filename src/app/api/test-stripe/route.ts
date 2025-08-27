@@ -11,7 +11,7 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Test Stripe connection
+    //test Stripe connection
     const account = await stripe.accounts.retrieve();
     
     return NextResponse.json({ 

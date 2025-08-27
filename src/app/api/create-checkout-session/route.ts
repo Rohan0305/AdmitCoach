@@ -5,14 +5,14 @@ import { verifyFirebaseToken } from '@/lib/firebase-admin';
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify user authentication
+    //verify user authentication
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const token = authHeader.split(' ')[1];
     
-    const user = await verifyFirebaseToken(token); // Verify Firebase token
+    const user = await verifyFirebaseToken(token); //verify firebase token
     if (!user) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
@@ -24,12 +24,12 @@ export async function POST(req: NextRequest) {
 
     const { packageId, userId, userEmail } = await req.json();
 
-    // Verify the userId in the request matches the authenticated user
+    //verify the userId in the request matches the authenticated user
     if (userId !== user.uid) {
       return NextResponse.json({ error: 'User ID mismatch' }, { status: 403 });
     }
 
-    // Validate inputs
+    //vlidate inputs
     if (!packageId || !userId || !userEmail) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate packageId
+    //validate packageId
     const validPackages = ['credits_5', 'credits_10', 'credits_20'];
     if (!validPackages.includes(packageId)) {
       return NextResponse.json(
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find the selected package
+    //find the selected package
     const selectedPackage = CREDIT_PACKAGES.find(pkg => pkg.id === packageId);
     if (!selectedPackage) {
       return NextResponse.json(
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create Stripe checkout session
+    //create stripe checkout session
     console.log('Creating Stripe checkout session for package:', selectedPackage);
     
     const session = await stripe.checkout.sessions.create({

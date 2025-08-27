@@ -6,13 +6,12 @@ import { getFirestore, getDoc, doc } from 'firebase/firestore';
 import { app } from "@/firebase";
 import Link from 'next/link';
 import useAuthUser from '../zustand/useAuthUser';
-import { User } from '@/app/types/types';
 
 export default function DashboardPage() {
   const { user, setUser } = useAuthUser();
   const [loading, setLoading] = useState(true);
 
-  // Refresh user data when dashboard loads to ensure credit count is up-to-date
+  //refresh user data when dashboard loads to ensure credit count is up-to-date
   useEffect(() => {
     const refreshUserData = async () => {
       if (user) {

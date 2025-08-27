@@ -36,12 +36,12 @@ export async function POST(req: NextRequest) {
       programType
     });
 
-    // Validate inputs
+    //validate inputs
     if (!audio || !question) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Validate file type and size
+    //validate file type and size
     if (!audio.type.startsWith('audio/')) {
       return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }

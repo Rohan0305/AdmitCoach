@@ -6,7 +6,6 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { saveInterviewSession, generateSessionId } from '@/utils/interviewStorage';
 import { getQuestionsByProgram } from '@/utils/questionLoader';
-import { Question, Answer } from '@/app/types/types';
 import useAuthUser from '../zustand/useAuthUser';
 import { app } from '@/firebase';
 
@@ -34,13 +33,13 @@ export default function InterviewPage() {
 
   useEffect(() => {
     if (user?.programType) {
-      // Check if user has credits
+      //check if user has credits
       if (!user.credits || user.credits <= 0) {
         setInsufficientCredits(true);
         return;
       }
       
-      // Additional validation - check credits in Firestore
+      //qdditional validation - check credits in Firestore
       const checkCredits = async () => {
         try {
           const auth = getAuth(app);
@@ -67,7 +66,7 @@ export default function InterviewPage() {
       setCurated(getRandomQuestions(questions, 2));
     }
     
-    // Cleanup function to clear timer when component unmounts
+    //cleanup function to clear timer when component unmounts
     return () => {
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
@@ -87,8 +86,8 @@ export default function InterviewPage() {
         } 
       });
       
-      // Try different MIME types for better browser compatibility and smaller file sizes
-      let mimeType = "audio/webm;codecs=opus"; // Opus codec for best compression
+      //ty different MIME types for better browser compatibility and smaller file sizes
+      let mimeType = "audio/webm;codecs=opus"; //opus codec for best compression
       if (!MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
         mimeType = "audio/webm";
       }
@@ -104,7 +103,7 @@ export default function InterviewPage() {
       
       const mediaRecorder = new window.MediaRecorder(stream, {
         mimeType: mimeType,
-        audioBitsPerSecond: 32000, // Very low bitrate for smaller files
+        audioBitsPerSecond: 32000, //very low bitrate for smaller files
       });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -114,10 +113,10 @@ export default function InterviewPage() {
         
         console.log('Audio recording completed, size:', audioBlob.size, 'bytes');
         
-        // If the file is still too large, compress it further
+        //if the file is still too large, compress it further
         if (audioBlob.size > 500000) { // 500KB limit
           console.log('Audio file is large, applying additional compression...');
-          // Create a canvas-based compression
+          //create a canvas-based compression
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (ctx) {
@@ -126,8 +125,8 @@ export default function InterviewPage() {
             ctx.fillStyle = '#3b82f6';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Convert to compressed data URL
-            const compressedDataURL = canvas.toDataURL('image/jpeg', 0.1); // Very high compression
+            //convert to compressed data URL
+            const compressedDataURL = canvas.toDataURL('image/jpeg', 0.1); //very high compression
             console.log('Compressed audio representation created, size:', compressedDataURL.length, 'bytes');
             
             setAudioURL(compressedDataURL);
@@ -141,7 +140,7 @@ export default function InterviewPage() {
               questionId: curated[current].id,
             };
             
-            // Ensure the answer is added to the answers array
+            //ensure the answer is added to the answers array
             setAnswers((prev) => {
               const updated = [...prev];
               const existingIndex = updated.findIndex(a => a.questionId === curated[current].id);
@@ -156,7 +155,7 @@ export default function InterviewPage() {
           }
         }
         
-        // Convert blob to data URL for persistent storage
+        //convert blob to data URL for persistent storage
         const reader = new FileReader();
         reader.onload = () => {
           const dataURL = reader.result as string;
@@ -171,7 +170,7 @@ export default function InterviewPage() {
             questionId: curated[current].id,
           };
           
-          // Ensure the answer is added to the answers array
+          //ensure the answer is added to the answers array
           setAnswers((prev) => {
             const updated = [...prev];
             const existingIndex = updated.findIndex(a => a.questionId === curated[current].id);
@@ -188,7 +187,7 @@ export default function InterviewPage() {
       mediaRecorder.start();
       setRecording(true);
       
-      // Start recording timer
+      //start recording timer
       setRecordingTime(0);
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
@@ -203,14 +202,14 @@ export default function InterviewPage() {
     mediaRecorderRef.current?.stop();
     setRecording(false);
     
-    // Stop recording timer
+    //stop recording timer
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
   };
 
-  // Show insufficient credits message
+  //show insufficient credits message
   if (insufficientCredits) {
     return (
       <div style={{
@@ -255,7 +254,7 @@ export default function InterviewPage() {
 
   const nextQuestion = async () => {
     if (current < curated.length - 1) {
-      // Before moving to next question, ensure current answer is saved
+      //before moving to next question, ensure current answer is saved
       if (hasRecorded && audioURL) {
         const currentAnswer: Answer = {
           audioURL: audioURL,
@@ -277,23 +276,23 @@ export default function InterviewPage() {
         });
       }
       
-      // Move to next question
+      //move to next question
       setAudioURL(null);
       setHasRecorded(false);
       setCurrent(current + 1);
     } else {
-      // Finish interview - save final answer first, then process
+      //finish interview - save final answer first, then process
       console.log('=== FINISHING INTERVIEW ===');
       console.log('Current answers state:', answers);
       console.log('Current question index:', current);
       console.log('Has recorded:', hasRecorded);
       console.log('Audio URL:', audioURL);
       
-      // Build the complete answers array locally
+      //build the complete answers array locally
       const allAnswers = [...answers];
       console.log('Initial allAnswers array:', allAnswers);
       
-      // Add the current answer if it exists
+      //add the current answer if it exists
       if (hasRecorded && audioURL) {
         const currentAnswer: Answer = {
           audioURL: audioURL,
@@ -327,11 +326,11 @@ export default function InterviewPage() {
         });
       });
       
-      // Show processing page immediately
+      //show processing page immediately
       setProcessingFeedback(true);
       setSessionDone(true);
       
-      // Process AI feedback with the complete answers array
+      //process AI feedback with the complete answers array
       try {
         const updatedAnswers = [...allAnswers];
         
@@ -342,7 +341,7 @@ export default function InterviewPage() {
           if (!answer.feedback) {
             try {
               console.log(`Converting audio URL to blob for question ${i + 1}`);
-              // Convert audio URL back to blob for API call
+              //convert audio URL back to blob for API call
               const response = await fetch(answer.audioURL!);
               const audioBlob = await response.blob();
               console.log(`Audio blob created for question ${i + 1}, size:`, audioBlob.size);
@@ -352,7 +351,7 @@ export default function InterviewPage() {
               formData.append("question", answer.question);
               formData.append("programType", user?.programType || "Medical School");
 
-              // Get current user's ID token
+              //get current user's ID token
               const auth = getAuth(app);
               const currentUser = auth.currentUser;
               if (!currentUser) {
@@ -380,7 +379,7 @@ export default function InterviewPage() {
               updatedAnswers[i] = { ...answer, feedback: feedbackData };
             } catch (error) {
               console.error(`Error processing question ${i + 1}:`, error);
-              // Continue with other questions even if one fails
+              //continue with other questions even if one fails
             }
           } else {
             console.log(`Question ${i + 1} already has feedback, skipping`);
@@ -389,10 +388,10 @@ export default function InterviewPage() {
         
         console.log('All answers processed, final updatedAnswers:', updatedAnswers);
         
-        // Update answers state with all feedback
+        //update answers state with all feedback
         setAnswers(updatedAnswers);
         
-        // Small delay to ensure state is updated before proceeding
+        //small delay to ensure state is updated before proceeding
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const auth = getAuth(app);
@@ -413,7 +412,7 @@ export default function InterviewPage() {
           await saveInterviewSession(session);
           console.log('Interview session saved successfully');
           
-          // CREDIT DEDUCTION - ONLY ONCE PER SESSION
+          //credit deduction - only once per session
           const sessionKey = `creditDeducted_${sessionId}`;
           const alreadyDeducted = sessionStorage.getItem(sessionKey);
           
@@ -432,7 +431,7 @@ export default function InterviewPage() {
                 console.log('Credit deducted successfully. New balance:', currentCredits - 1);
                 sessionStorage.setItem(sessionKey, 'true');
                 
-                // Update Zustand store to reflect new credit count immediately
+                //update zustand store to reflect new credit count immediately
                 if (user) {
                   setUser({ ...user, credits: currentCredits - 1 });
                 }

@@ -18,10 +18,10 @@ export default function CreditPurchase() {
     setLoading(packageId);
     
     try {
-      // Get current user's ID token
+      //get current user's ID token
       const idToken = await currentUser.getIdToken();
       
-      // Create checkout session
+      //create checkout session
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {

@@ -3,7 +3,7 @@ import { stripe } from '@/lib/stripe';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 
-// Initialize Firebase Admin if not already initialized
+//initialize firebase admin if not already initialized
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -17,7 +17,7 @@ if (!getApps().length) {
 export async function POST(req: NextRequest) {
   console.log('Webhook received:', req.url);
   
-  // Debug Firebase configuration
+  //debug firebase configuration
   console.log('Firebase environment check:', {
     hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
     hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Handle the event
+  //handle the event
   switch (event.type) {
     case 'checkout.session.completed':
       console.log('Processing checkout.session.completed event');
@@ -67,13 +67,13 @@ export async function POST(req: NextRequest) {
       console.log('Session metadata:', session.metadata);
       console.log('Session object keys:', Object.keys(session));
       
-      // Check if this session was already processed by looking for existing credit purchase record
+      //check if this session was already processed by looking for existing credit purchase record
       if (session.metadata?.userId && session.metadata?.credits) {
         try {
           const db = getFirestore();
           const userRef = db.collection('users').doc(session.metadata.userId);
           
-          // Check if this session was already processed
+          //check if this session was already processed
           const userDoc = await userRef.get();
           const lastPurchase = userDoc.data()?.lastCreditPurchase;
           const sessionCreated = new Date(session.created * 1000); // Convert Stripe timestamp
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
           console.log('Session created time:', sessionCreated);
           console.log('Last credit purchase time:', lastPurchase);
           
-          // If the session was created before the last purchase, skip it
+          //if the session was created before the last purchase, skip it
           if (lastPurchase && new Date(lastPurchase) > sessionCreated) {
             console.log('Session already processed, skipping credit addition');
             break;
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
           console.error('Error updating user credits:', error);
           console.error('Error details:', error instanceof Error ? error.message : String(error));
           
-          // Try to get more details about the error
+          //try to get more details about the error
           if (error instanceof Error && 'code' in error) {
             const firebaseError = error as Error & { code: string; customData?: unknown };
             console.error('Firebase error code:', firebaseError.code);

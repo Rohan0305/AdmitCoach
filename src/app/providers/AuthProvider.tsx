@@ -5,7 +5,6 @@ import { onAuthStateChanged, getAuth } from 'firebase/auth';
 import { getDoc, doc, getFirestore } from 'firebase/firestore';
 import { app } from '@/firebase';
 import useAuthUser from '../zustand/useAuthUser';
-import { User } from '@/app/types/types';
 
 interface AuthProviderProps {
   children: React.ReactNode;

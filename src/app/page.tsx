@@ -141,25 +141,13 @@ export default function Home() {
           AdmitCoach
         </h1>
         
-        {/* Subtitle */}
-        <p style={{ 
-          color: 'var(--color-label)', 
-          fontSize: 'clamp(1.1rem, 3vw, 1.4rem)', 
-          margin: '0 0 3rem 0', 
-          maxWidth: 700,
-          lineHeight: 1.6,
-          fontWeight: 400,
-        }}>
-          Master your professional school interviews with AI-powered mock interviews. Practice for Medical, Dental, Veterinary, Pharmacy, Nursing, PA, PT, OT, Law, Business, and Graduate school admissions.
-        </p>
-        
         {/* Program types highlight */}
         <div style={{
           background: 'rgba(14, 165, 233, 0.1)',
           backdropFilter: 'blur(10px)',
           borderRadius: 20,
           padding: '1.5rem 2rem',
-          marginBottom: 3,
+          marginBottom: '2rem',
           border: '1px solid rgba(14, 165, 233, 0.2)',
           maxWidth: 800,
         }}>
@@ -172,6 +160,18 @@ export default function Home() {
             <strong>Get instant feedback</strong> and boost your confidence for your dream school!
           </p>
         </div>
+        
+        {/* Subtitle */}
+        <p style={{ 
+          color: 'var(--color-label)', 
+          fontSize: 'clamp(1.1rem, 3vw, 1.4rem)', 
+          margin: '0 0 3rem 0', 
+          maxWidth: 700,
+          lineHeight: 1.6,
+          fontWeight: 400,
+        }}>
+          Master your professional school interviews with AI-powered mock interviews. Practice for Medical, Dental, Veterinary, Pharmacy, Nursing, PA, PT, OT, Law, Business, and Graduate school admissions.
+        </p>
         
         {/* CTA Button */}
         <Link
@@ -199,7 +199,7 @@ export default function Home() {
             e.currentTarget.style.boxShadow = '0 20px 40px rgba(14, 165, 233, 0.2)';
           }}
         >
-          Get Started Free
+          Get Started
         </Link>
         
         {/* Trust indicators */}

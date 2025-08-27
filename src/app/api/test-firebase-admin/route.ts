@@ -13,7 +13,7 @@ export async function GET() {
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL?.substring(0, 30) + '...'
     });
     
-    // Test basic Firestore access using the same instance as the webhook
+    //test basic Firestore access using the same instance as the webhook
     const db = getFirestore(app);
     console.log('Firestore instance created successfully');
     console.log('Firestore app config:', {
@@ -21,7 +21,7 @@ export async function GET() {
       appId: app.options.appId
     });
     
-    // Test writing to a test document
+    //test writing to a test document
     const testRef = doc(db, 'test', 'webhook-test');
     const testData = {
       timestamp: new Date().toISOString(),
@@ -33,13 +33,13 @@ export async function GET() {
     await setDoc(testRef, testData);
     console.log('Test document written successfully');
     
-    // Test reading the document back
+    //test reading the document back
     const testDoc = await getDoc(testRef);
     if (testDoc.exists()) {
       console.log('Test document read successfully:', testDoc.data());
     }
     
-    // Clean up - delete the test document
+    //clean up - delete the test document
     await setDoc(testRef, { deleted: true });
     
     return NextResponse.json({ 
